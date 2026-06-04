@@ -1,0 +1,29 @@
+# Wails / frontend build output
+build/bin
+node_modules
+frontend/dist/*
+!frontend/dist/gitkeep
+
+# Compiled Go binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+/gobchat-log-browser
+
+# Go test/coverage artifacts
+*.test
+*.out
+coverage.*
+
+# Chat logs are personal/sensitive — never commit real logs.
+# Synthetic test fixtures live under internal/**/testdata and are committed explicitly.
+*.log
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+*.local
