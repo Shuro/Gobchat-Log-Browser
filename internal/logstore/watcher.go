@@ -1,6 +1,8 @@
 package logstore
 
 import (
+	"os"
+
 	"github.com/fsnotify/fsnotify"
 )
 
@@ -47,6 +49,14 @@ func (w *Watcher) loop() {
 		case ev, ok := <-w.fsw.Events:
 			if !ok {
 				return
+			}
+			// A newly created subdirectory (e.g. a new character folder) must be
+			// added to the watch set, since fsnotify is not recursive.
+			if ev.Op&fsnotify.Create != 0 {
+				if fi, err := os.Stat(ev.Name); err == nil && fi.IsDir() {
+					_ = w.fsw.Add(ev.Name)
+					continue
+				}
 			}
 			if !IsLogFile(ev.Name) || w.onChange == nil {
 				continue

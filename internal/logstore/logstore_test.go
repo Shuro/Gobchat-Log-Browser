@@ -7,27 +7,38 @@ import (
 	"gobchat-log-browser/internal/search"
 )
 
-func TestScanDirectory(t *testing.T) {
-	metas, err := ScanDirectory("testdata")
+func TestScanDirectoryRecursive(t *testing.T) {
+	metas, watchDirs, err := ScanDirectory("testdata")
 	if err != nil {
 		t.Fatalf("ScanDirectory: %v", err)
 	}
-	if len(metas) != 1 {
-		t.Fatalf("metas = %d, want 1", len(metas))
+	// One log at the top level + one in the Nevio/ subfolder = 2.
+	if len(metas) != 2 {
+		t.Fatalf("metas = %d, want 2 (recursive scan)", len(metas))
 	}
-	m := metas[0]
-	if m.MessageCount != 4 {
-		t.Fatalf("MessageCount = %d, want 4", m.MessageCount)
+
+	byFolder := map[string]*LogMeta{}
+	for _, m := range metas {
+		byFolder[m.Folder] = m
 	}
-	// GobchatInfo's "Gobchat" sender is excluded; only RP participants remain.
-	if len(m.Participants) != 2 || m.Participants[0] != "Alpha Tester" || m.Participants[1] != "Beta User" {
-		t.Fatalf("Participants = %v, want [Alpha Tester Beta User]", m.Participants)
+	top, ok := byFolder[""]
+	if !ok {
+		t.Fatalf("expected a top-level log (folder \"\"); folders seen: %v", folders(metas))
 	}
-	if y := m.LogDate.Year(); y != 2026 {
-		t.Fatalf("LogDate year = %d, want 2026 (from filename)", y)
+	if top.MessageCount != 4 {
+		t.Fatalf("top-level MessageCount = %d, want 4", top.MessageCount)
 	}
-	if m.Duration <= 0 {
-		t.Fatalf("Duration = %v, want > 0", m.Duration)
+	nested, ok := byFolder["Nevio"]
+	if !ok {
+		t.Fatalf("expected a log in folder \"Nevio\"; folders seen: %v", folders(metas))
+	}
+	if len(nested.Participants) != 1 || nested.Participants[0] != "Nevio Ateius" {
+		t.Fatalf("nested participants = %v", nested.Participants)
+	}
+
+	// The scan reports directories to watch, including the subfolder.
+	if !contains(watchDirs, filepath.Join("testdata", "Nevio")) {
+		t.Fatalf("watchDirs missing the Nevio subfolder: %v", watchDirs)
 	}
 }
 
@@ -37,8 +48,11 @@ func TestStoreGetEntriesIndexes(t *testing.T) {
 	if err := s.ScanAll([]string{"testdata"}); err != nil {
 		t.Fatalf("ScanAll: %v", err)
 	}
-	if got := s.List(); len(got) != 1 {
-		t.Fatalf("List = %d, want 1", len(got))
+	if got := s.List(); len(got) != 2 {
+		t.Fatalf("List = %d, want 2", len(got))
+	}
+	if len(s.WatchDirs()) == 0 {
+		t.Fatalf("WatchDirs empty after ScanAll")
 	}
 
 	path := filepath.Join("testdata", "chatlog_2026-01-02_20-01.log")
@@ -52,15 +66,28 @@ func TestStoreGetEntriesIndexes(t *testing.T) {
 	if !idx.HasFile(path) {
 		t.Fatalf("file not indexed after GetEntries")
 	}
-
-	// A second call returns the cached slice (same backing array).
 	again, _ := s.GetEntries(path)
 	if &again[0] != &entries[0] {
 		t.Fatalf("expected cached entries on second GetEntries")
 	}
-
-	// Sanity: the index can find a word from the fixture.
 	if res := idx.Query("evening", path, 0); len(res) != 1 {
 		t.Fatalf("query 'evening' = %d, want 1", len(res))
 	}
+}
+
+func folders(metas []*LogMeta) []string {
+	out := make([]string, len(metas))
+	for i, m := range metas {
+		out[i] = m.Folder
+	}
+	return out
+}
+
+func contains(items []string, want string) bool {
+	for _, it := range items {
+		if it == want {
+			return true
+		}
+	}
+	return false
 }

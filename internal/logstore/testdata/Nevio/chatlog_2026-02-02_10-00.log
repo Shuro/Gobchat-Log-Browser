@@ -1,0 +1,4 @@
+Chatlogger Id: CCLv1
+Chatlogger format:{channel} [{date} {time-full}] {sender}: {message}
+Say [2026-02-02 10:00:00+01:00] Nevio Ateius: "A line from a character subfolder."
+Emote [2026-02-02 10:01:00+01:00] Nevio Ateius: writes a quiet note.

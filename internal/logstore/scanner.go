@@ -1,6 +1,7 @@
 package logstore
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -17,6 +18,7 @@ import (
 type LogMeta struct {
 	FilePath     string           `json:"file_path"`
 	FileName     string           `json:"file_name"`
+	Folder       string           `json:"folder"` // subfolder relative to the scan root ("" = top level)
 	LogDate      time.Time        `json:"log_date"`
 	MessageCount int              `json:"message_count"`
 	Participants []string         `json:"participants"`
@@ -29,27 +31,73 @@ type LogMeta struct {
 
 var filenameDateRe = regexp.MustCompile(`(\d{4}-\d{2}-\d{2})[_ ](\d{2})-(\d{2})`)
 
-// ScanDirectory parses every *.log file in dir (non-recursive) and returns their
-// metadata, sorted by log date descending (newest first). Files that cannot be
-// read are skipped; a parse never fails outright (malformed lines are tolerated).
-func ScanDirectory(dir string) ([]*LogMeta, error) {
-	pattern := filepath.Join(dir, "*.log")
-	matches, err := filepath.Glob(pattern)
-	if err != nil {
-		return nil, err
+// skipDirs are directory names created by the Electron/Chromium runtime that
+// Gobchat ships with. They never contain chat logs and can be large, so the
+// recursive scan skips them entirely.
+var skipDirs = map[string]struct{}{
+	"DawnCache":       {},
+	"GPUCache":        {},
+	"Cache":           {},
+	"Code Cache":      {},
+	"blob_storage":    {},
+	"Local Storage":   {},
+	"Session Storage": {},
+	"IndexedDB":       {},
+	"Network":         {},
+}
+
+// ScanDirectory walks root recursively and returns metadata for every *.log file
+// found, plus the list of directories that should be watched for changes. Logs
+// may be flat or split across subfolders: Gobchat's log path is configurable per
+// profile, so users often point different profiles at different subfolders.
+// Electron cache and hidden directories are skipped. A missing root is not an error.
+func ScanDirectory(root string) (metas []*LogMeta, watchDirs []string, err error) {
+	if fi, statErr := os.Stat(root); statErr != nil || !fi.IsDir() {
+		return nil, nil, nil
 	}
-	metas := make([]*LogMeta, 0, len(matches))
-	for _, path := range matches {
-		meta, err := ExtractMeta(path)
-		if err != nil {
-			continue // unreadable file: skip rather than fail the whole scan
+
+	seenDir := map[string]struct{}{}
+	addDir := func(d string) {
+		if _, ok := seenDir[d]; !ok {
+			seenDir[d] = struct{}{}
+			watchDirs = append(watchDirs, d)
 		}
-		metas = append(metas, meta)
 	}
-	sort.Slice(metas, func(i, j int) bool {
-		return metas[i].LogDate.After(metas[j].LogDate)
+
+	walkErr := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return nil // tolerate unreadable entries; keep scanning
+		}
+		if d.IsDir() {
+			if path != root {
+				name := d.Name()
+				if _, skip := skipDirs[name]; skip || strings.HasPrefix(name, ".") {
+					return fs.SkipDir
+				}
+			}
+			addDir(path)
+			return nil
+		}
+		if !IsLogFile(d.Name()) {
+			return nil
+		}
+		meta, e := ExtractMeta(path)
+		if e != nil {
+			return nil // unreadable file: skip rather than fail the scan
+		}
+		rel, _ := filepath.Rel(root, filepath.Dir(path))
+		if rel == "." {
+			rel = ""
+		}
+		meta.Folder = filepath.ToSlash(rel)
+		metas = append(metas, meta)
+		return nil
 	})
-	return metas, nil
+	if walkErr != nil {
+		return nil, nil, walkErr
+	}
+	sort.Slice(metas, func(i, j int) bool { return metas[i].LogDate.After(metas[j].LogDate) })
+	return metas, watchDirs, nil
 }
 
 // ExtractMeta parses a single log file and derives its overview metadata.
@@ -58,9 +106,8 @@ func ExtractMeta(path string) (*LogMeta, error) {
 	if err != nil {
 		return nil, err
 	}
-	info, err := os.Stat(path)
 	var size int64
-	if err == nil {
+	if info, statErr := os.Stat(path); statErr == nil {
 		size = info.Size()
 	}
 	return metaFromParsed(path, pl, size), nil
@@ -125,7 +172,7 @@ func filenameDate(name string) time.Time {
 	return ts
 }
 
-// IsLogFile reports whether a path looks like a log file this app handles.
-func IsLogFile(path string) bool {
-	return strings.EqualFold(filepath.Ext(path), ".log")
+// IsLogFile reports whether a filename is a log file this app handles.
+func IsLogFile(name string) bool {
+	return strings.EqualFold(filepath.Ext(name), ".log")
 }

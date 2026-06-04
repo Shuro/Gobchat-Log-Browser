@@ -69,8 +69,15 @@ func (a *App) Startup(ctx context.Context) {
 	a.store = logstore.New(a.index)
 	a.mu.Unlock()
 
-	_ = a.store.ScanAll(a.effectiveDirs())
-	a.startWatcher()
+	// The initial scan can touch hundreds of files; run it off the startup path
+	// so the window appears immediately, then tell the frontend to refresh.
+	go func() {
+		_ = a.store.ScanAll(a.effectiveDirs())
+		a.startWatcher()
+		if a.ctx != nil {
+			wruntime.EventsEmit(a.ctx, "logs:scanned")
+		}
+	}()
 }
 
 // Shutdown is wired to Wails OnShutdown to release the watcher.
@@ -309,7 +316,13 @@ func (a *App) startWatcher() {
 	}
 	a.mu.Unlock()
 
-	w, err := logstore.Watch(a.effectiveDirs(), a.onFileChange)
+	// Watch every directory the scan discovered (roots plus their subfolders),
+	// not just the configured roots, since fsnotify is not recursive.
+	dirs := a.store.WatchDirs()
+	if len(dirs) == 0 {
+		dirs = a.effectiveDirs()
+	}
+	w, err := logstore.Watch(dirs, a.onFileChange)
 	if err != nil {
 		return
 	}
@@ -361,6 +374,7 @@ func (a *App) summary(m logstore.LogMeta) LogSummary {
 	return LogSummary{
 		FilePath:     m.FilePath,
 		FileName:     m.FileName,
+		Folder:       m.Folder,
 		LogDate:      isoTime(m.LogDate),
 		MessageCount: m.MessageCount,
 		Participants: m.Participants,

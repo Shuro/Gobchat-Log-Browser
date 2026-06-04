@@ -15,10 +15,11 @@ import (
 // LogStore holds metadata for all known logs and a lazy cache of fully parsed
 // logs. It is safe for concurrent use.
 type LogStore struct {
-	mu    sync.RWMutex
-	metas map[string]*LogMeta          // keyed by file path
-	cache map[string]*parser.ParsedLog // lazily filled on first GetEntries
-	index *search.Index
+	mu        sync.RWMutex
+	metas     map[string]*LogMeta          // keyed by file path
+	cache     map[string]*parser.ParsedLog // lazily filled on first GetEntries
+	watchDirs []string                     // directories (incl. subfolders) to watch
+	index     *search.Index
 }
 
 // New creates a LogStore that indexes parsed entries into idx (idx may be nil to
@@ -31,21 +32,31 @@ func New(idx *search.Index) *LogStore {
 	}
 }
 
-// ScanAll rescans the given directories, replacing the current metadata set. It
-// does not parse-cache or index entries; that happens lazily per file.
+// ScanAll rescans the given root directories recursively, replacing the current
+// metadata set and recording the directories to watch. It does not parse-cache
+// or index entries; that happens lazily per file.
 func (s *LogStore) ScanAll(dirs []string) error {
 	fresh := map[string]*LogMeta{}
+	watch := []string{}
+	seenWatch := map[string]struct{}{}
 	for _, dir := range dirs {
-		metas, err := ScanDirectory(dir)
+		metas, wdirs, err := ScanDirectory(dir)
 		if err != nil {
 			return err
 		}
 		for _, m := range metas {
 			fresh[m.FilePath] = m
 		}
+		for _, w := range wdirs {
+			if _, ok := seenWatch[w]; !ok {
+				seenWatch[w] = struct{}{}
+				watch = append(watch, w)
+			}
+		}
 	}
 	s.mu.Lock()
 	s.metas = fresh
+	s.watchDirs = watch
 	// Drop cache entries for files that disappeared.
 	for path := range s.cache {
 		if _, ok := fresh[path]; !ok {
@@ -57,6 +68,16 @@ func (s *LogStore) ScanAll(dirs []string) error {
 	}
 	s.mu.Unlock()
 	return nil
+}
+
+// WatchDirs returns the directories (roots plus their non-skipped subfolders)
+// that should be watched for log changes. Valid after ScanAll.
+func (s *LogStore) WatchDirs() []string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	out := make([]string, len(s.watchDirs))
+	copy(out, s.watchDirs)
+	return out
 }
 
 // List returns all known metadata, newest first.

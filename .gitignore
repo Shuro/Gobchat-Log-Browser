@@ -20,7 +20,7 @@ coverage.*
 # Chat logs are personal/sensitive — never commit real logs.
 # Synthetic test fixtures under testdata/ are committed explicitly (exception below).
 *.log
-!**/testdata/*.log
+!**/testdata/**
 
 # OS / editor cruft
 .DS_Store
