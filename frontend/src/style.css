@@ -1,26 +1,298 @@
-html {
-    background-color: rgba(27, 38, 54, 1);
-    text-align: center;
-    color: white;
-}
+/* Dark theme + Gobchat-like roleplay highlighting. Colors are CSS variables so
+   they can be themed/configured later. */
+:root {
+  --bg: #1b2636;
+  --bg-panel: #202c40;
+  --bg-elevated: #28364e;
+  --border: #34435f;
+  --text: #e6ebf2;
+  --text-muted: #8c9bb5;
+  --accent: #5aa9e6;
 
-body {
-    margin: 0;
-    color: white;
-    font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
-    "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
+  /* RP highlight colors (Gobchat-inspired). */
+  --color-plain: #d7deea;
+  --color-speech: #ffffff;     /* spoken dialogue: bright */
+  --color-emote: #f0c674;      /* emotes/actions: warm yellow, italic */
+  --color-ooc: #8c9bb5;        /* out-of-character: muted */
+  --color-mention-bg: #3a5a40; /* mentions: highlighted */
+  --color-mention-fg: #c8f0c0;
+
+  /* Channel accents. */
+  --channel-say: #d7deea;
+  --channel-emote: #f0c674;
+  --channel-yell: #ffb454;
+  --channel-shout: #ff8f6b;
+  --channel-party: #7ec8e3;
+  --channel-system: #6b7a96;
 }
 
 @font-face {
-    font-family: "Nunito";
-    font-style: normal;
-    font-weight: 400;
-    src: local(""),
-    url("assets/fonts/nunito-v16-latin-regular.woff2") format("woff2");
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 400;
+  src: local(''), url('assets/fonts/nunito-v16-latin-regular.woff2') format('woff2');
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 #app {
-    height: 100vh;
-    text-align: center;
+  height: 100vh;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.app-header {
+  flex: 0 0 auto;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel);
+}
+.app-header h1 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.app-body {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  min-height: 0;
+}
+
+/* --- Log list (left) --- */
+.log-list {
+  border-right: 1px solid var(--border);
+  background: var(--bg-panel);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+}
+.list li {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.list li:hover {
+  background: var(--bg-elevated);
+}
+.list li.active {
+  background: var(--bg-elevated);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.row-top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+.row-top .count {
+  color: var(--text-muted);
+}
+.participants {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.folder {
+  display: inline-block;
+  font-size: 11px;
+  margin-top: 3px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+.row-bottom {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+.duration {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.tag {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+/* --- Viewer (right) --- */
+.viewer {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.viewer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.viewer-title {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+.viewer-title .muted {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.filter {
+  flex: 0 1 280px;
+  padding: 5px 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+}
+.scroller {
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
+
+/* --- Entry row --- */
+.entry {
+  display: flex;
+  gap: 8px;
+  padding: 3px 12px;
+  font-size: 14px;
+  line-height: 1.45;
+  align-items: baseline;
+}
+.entry:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+.entry .time {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+}
+.entry .channel-tag {
+  flex: 0 0 auto;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  min-width: 52px;
+}
+.entry .sender {
+  flex: 0 0 auto;
+  font-weight: 700;
+}
+.entry .sender .symbol {
+  margin-right: 2px;
+}
+.entry .sender .realm {
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-left: 2px;
+}
+.entry .message {
+  flex: 1 1 auto;
+  color: var(--color-plain);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.entry .part {
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Whole-channel coloring for emote lines. */
+.entry.channel-emote .message {
+  color: var(--color-emote);
+  font-style: italic;
+}
+.entry.channel-unknown .message {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* RP span coloring. */
+.span-plain {
+  color: inherit;
+}
+.span-speech {
+  color: var(--color-speech);
+}
+.span-emote {
+  color: var(--color-emote);
+  font-style: italic;
+}
+.span-ooc {
+  color: var(--color-ooc);
+}
+.span-mention {
+  background: var(--color-mention-bg);
+  color: var(--color-mention-fg);
+  border-radius: 3px;
+  padding: 0 2px;
+  font-weight: 700;
+}
+
+/* --- Shared --- */
+.placeholder {
+  padding: 24px;
+  color: var(--text-muted);
+  text-align: center;
+}
+.placeholder.error {
+  color: #ff8f6b;
+}
+button {
+  background: var(--bg-elevated);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+button:hover:not(:disabled) {
+  background: var(--border);
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
