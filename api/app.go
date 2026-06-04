@@ -253,6 +253,19 @@ func (a *App) SetTags(fileName string, tagList []string, note string) error {
 
 func (a *App) GetAllTagNames() []string { return a.tags.AllTags() }
 
+// --- Dialogs ---
+
+// PickDirectory opens the native directory picker and returns the chosen path
+// (empty string if the user cancels).
+func (a *App) PickDirectory() (string, error) {
+	if a.ctx == nil {
+		return "", nil
+	}
+	return wruntime.OpenDirectoryDialog(a.ctx, wruntime.OpenDialogOptions{
+		Title: "Select a Gobchat log directory",
+	})
+}
+
 // --- i18n ---
 
 // GetLocaleMessages returns the backend's localized strings for the active

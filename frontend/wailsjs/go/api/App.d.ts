@@ -18,6 +18,8 @@ export function GetLogThreads(arg1:string):Promise<Array<api.ThreadDTO>>;
 
 export function GetTags(arg1:string):Promise<tags.FileTags>;
 
+export function PickDirectory():Promise<string>;
+
 export function SaveConfig(arg1:config.Config):Promise<void>;
 
 export function ScanLogs():Promise<Array<api.LogSummary>>;

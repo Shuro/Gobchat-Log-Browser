@@ -84,9 +84,9 @@ export const useLogsStore = defineStore('logs', () => {
     }
   }
 
-  async function openLog(path: string, line: number | null = null) {
+  async function openLog(path: string, line: number | null = null, force = false) {
     // Re-opening the same log to jump to a line: keep entries, just retarget.
-    if (path === selectedPath.value && entries.value.length > 0) {
+    if (!force && path === selectedPath.value && entries.value.length > 0) {
       viewMode.value = 'raw' // a line target only makes sense in the raw view
       targetLine.value = line
       return
@@ -122,6 +122,16 @@ export const useLogsStore = defineStore('logs', () => {
         loadingThreads.value = false
       }
     }
+  }
+
+  // reloadCurrent re-fetches the open log, bypassing the cache-skip, so new
+  // highlight markers / mention names take effect after a settings change.
+  async function reloadCurrent() {
+    if (!selectedPath.value) return
+    const wasReassembled = viewMode.value === 'reassembled'
+    threads.value = []
+    await openLog(selectedPath.value, null, true)
+    if (wasReassembled) await setViewMode('reassembled')
   }
 
   function clearTarget() {
@@ -170,6 +180,7 @@ export const useLogsStore = defineStore('logs', () => {
     refreshList,
     rescan,
     openLog,
+    reloadCurrent,
     setViewMode,
     clearTarget,
     loadTags,

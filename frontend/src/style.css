@@ -26,6 +26,24 @@
   --channel-system: #6b7a96;
 }
 
+/* Light theme overrides. */
+:root[data-theme='light'] {
+  --bg: #f4f6fa;
+  --bg-panel: #e9edf4;
+  --bg-elevated: #dde3ee;
+  --border: #c4ccdb;
+  --text: #1b2330;
+  --text-muted: #5d6b82;
+  --accent: #2f6fb0;
+
+  --color-plain: #1b2330;
+  --color-speech: #0b1a2b;
+  --color-emote: #8a5a00;
+  --color-ooc: #6b7787;
+  --color-mention-bg: #cdeccd;
+  --color-mention-fg: #1d4d1d;
+}
+
 @font-face {
   font-family: 'Nunito';
   font-style: normal;
@@ -97,6 +115,119 @@ body {
 }
 button.ghost {
   background: transparent;
+}
+.icon-btn {
+  flex: 0 0 auto;
+  font-size: 16px;
+  line-height: 1;
+  padding: 5px 9px;
+}
+
+/* --- Settings panel --- */
+.settings-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 20;
+}
+.settings-panel {
+  width: 460px;
+  max-width: 92vw;
+  height: 100%;
+  background: var(--bg-panel);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+.settings-header,
+.settings-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.settings-footer {
+  border-bottom: none;
+  border-top: 1px solid var(--border);
+  gap: 8px;
+  justify-content: flex-end;
+}
+.settings-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 14px;
+}
+.settings-body section {
+  margin-bottom: 20px;
+}
+.settings-body h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+.settings-body .grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.settings-body select,
+.settings-body textarea,
+.settings-body input {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+}
+.check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.dir-list {
+  list-style: none;
+  margin: 8px 0;
+  padding: 0;
+}
+.dir-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+.dir-path {
+  flex: 1 1 auto;
+  font-size: 12px;
+  word-break: break-all;
+}
+.mentions {
+  width: 100%;
+  resize: vertical;
+}
+.marker-group {
+  margin-bottom: 10px;
+}
+.marker-group-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.marker-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.marker-input {
+  width: 90px;
 }
 
 /* The viewer pane hosts the search-results overlay. */

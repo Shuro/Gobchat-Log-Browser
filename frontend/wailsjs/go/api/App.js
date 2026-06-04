@@ -30,6 +30,10 @@ export function GetTags(arg1) {
   return window['go']['api']['App']['GetTags'](arg1);
 }
 
+export function PickDirectory() {
+  return window['go']['api']['App']['PickDirectory']();
+}
+
 export function SaveConfig(arg1) {
   return window['go']['api']['App']['SaveConfig'](arg1);
 }
