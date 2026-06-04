@@ -52,18 +52,32 @@ Say [2026-05-16 20:09:30+02:00] ★M'iqo Tester [Shiva]: "Hello..." (1/2)
 - ✅ The real sample log was removed (personal/sensitive). The committed synthetic fixtures cover the format patterns.
 - ✅ `go build ./...`, `go vet ./...`, `gofmt -l` all clean.
 
-## Next steps (frontend)
+## Frontend (complete)
 
-Backend is feature-complete for v1. Remaining work is the Vue 3 frontend:
+Vue 3 + Pinia + vue-i18n + vue-virtual-scroller, all built and committed:
 
-1. **Regenerate Wails bindings** — `wails generate module` (or just `wails dev`) refreshes `frontend/wailsjs/` from the new `api.App` (currently still the scaffold `App.Greet`).
-2. **Install frontend deps** — `pinia`, `vue-i18n`, `vue-virtual-scroller` (in `frontend/`, `npm install <pkg>`).
-3. **Components** (`frontend/src/components/`): `LogList.vue` (overview: date, participants, message count, duration, tags), `LogViewer.vue` (virtual-scrolled), `EntryRow.vue` (renders `spans` by type; channel styling; Raw/Reassembled toggle calling `GetLogThreads`), `SearchBar.vue` + `SearchResults.vue` (per-log linear filter vs. global `Search`), `TagEditor.vue`, `SettingsPanel.vue` (directories, language, mention names, markers, theme).
-4. **i18n** — vue-i18n with `frontend/src/locales/{en,de}.json`; merge backend strings from `GetLocaleMessages()` at startup.
-5. **Listen** for `log:new`/`log:updated`/`log:removed` runtime events to refresh the list/open log live.
-6. **Build & smoke test** — `wails dev` to iterate, `wails build` for the Windows binary.
+- **Two-pane shell** ([App.vue](frontend/src/App.vue)) with header search and a settings button.
+- **LogList** — overview with date, participants, message count, duration, per-profile folder badge, tags.
+- **LogViewer / EntryRow / ThreadRow** — virtual-scrolled; Gobchat-style RP highlight spans; **Raw/Reassembled** toggle (`GetLogThreads`); per-log live filter.
+- **SearchBar / SearchResults** — global (index) or current-log search; grouped results; click jumps to the line and highlights it.
+- **TagEditor** — tags (chips + datalist autocomplete) and note per log.
+- **SettingsPanel** — directories (native picker), theme (live), language, mention names, RP markers.
+- **SetupWizard** — first-run (no config or no usable log dir): language, theme, log folder.
+- **i18n** — en/de locale files; runtime switching; backend strings merged via `GetLocaleMessages`.
+- Listens for `logs:scanned` / `log:new|updated|removed` events.
 
-Backend call contract is stable; the frontend only consumes the DTOs in [api/dto.go](api/dto.go).
+## Status: v1 feature-complete
+
+`go test ./...`, `go vet ./...`, `npm run build`, and full `wails build`
+(→ `build/bin/gobchat-log-browser.exe`) all pass.
+
+### Possible follow-ups
+- Lighter header-only metadata pass if libraries grow very large (see ADR-0008).
+- Channel filter UI (backend `ChannelFilters` exists in config).
+- Snippet term highlighting in search results.
+- App icon / installer polish; packaging for Linux/macOS.
+
+To run/iterate: `wails dev`. To build: `wails build`. Remember the PATH note above for the toolchain.
 
 ## Toolchain gotchas for the next session
 
