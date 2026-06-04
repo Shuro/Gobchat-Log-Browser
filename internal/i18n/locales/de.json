@@ -1,0 +1,7 @@
+{
+  "error.scanFailed": "Das Log-Verzeichnis konnte nicht durchsucht werden.",
+  "error.parseFailed": "Die Logdatei konnte nicht gelesen werden.",
+  "error.configSaveFailed": "Die Einstellungen konnten nicht gespeichert werden.",
+  "notify.newLog": "Ein neues Log wurde erkannt: %s",
+  "notify.logUpdated": "Das geöffnete Log wurde aktualisiert."
+}

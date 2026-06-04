@@ -1,0 +1,7 @@
+{
+  "error.scanFailed": "Could not scan the log directory.",
+  "error.parseFailed": "Could not read the log file.",
+  "error.configSaveFailed": "Could not save settings.",
+  "notify.newLog": "A new log was detected: %s",
+  "notify.logUpdated": "The open log was updated."
+}
