@@ -15,6 +15,7 @@ const unsubscribers: Array<() => void> = []
 onMounted(() => {
   // The backend scans on startup; pull whatever is ready now…
   store.refreshList()
+  store.loadAllTagNames()
   // …and refresh again when the (async) initial scan finishes.
   unsubscribers.push(EventsOn('logs:scanned', () => store.refreshList()))
   // A new or removed log changes the list.
