@@ -39,22 +39,31 @@ Say [2026-05-16 20:09:30+02:00] ★M'iqo Tester [Shiva]: "Hello..." (1/2)
 - ✅ Seven ADRs + template written under [docs/adr/](docs/adr/).
 - ✅ Wails Vue-TS project scaffolded and merged into repo root (module `gobchat-log-browser`). Standard scaffold: [main.go](main.go), [app.go](app.go) (still has placeholder `Greet`), [frontend/](frontend/), [wails.json](wails.json).
 - ✅ Git hygiene: [.gitignore](.gitignore) (sensitive `*.log` excluded; `testdata/*.log` exempt) and [.gitattributes](.gitattributes) (LF). History is committed in logical commits.
-- ✅ **Backend core packages implemented, tested (`go test ./internal/...` green), and committed:**
+- ✅ **Entire Go backend implemented, tested (`go test ./...` green), vetted, and committed:**
   - [internal/highlight/](internal/highlight/) — configurable RP tokenizer → flat `[]Span` (speech/emote/ooc/mention).
-  - [internal/parser/](internal/parser/) — CCLv1/FCLv1 format→regex, `Parse`→`ParsedLog`; sender split (symbol/name/realm); heuristic part/continuation; unmatched lines → `ChannelUnknown` (never dropped). Synthetic fixture in `internal/parser/testdata/sample.log`.
+  - [internal/parser/](internal/parser/) — CCLv1/FCLv1 format→regex, `Parse`→`ParsedLog`; sender split (symbol/name/realm); heuristic part/continuation; unmatched lines → `ChannelUnknown` (never dropped). Synthetic fixture in `internal/parser/testdata/`.
   - [internal/config/](internal/config/) — `Config` + atomic load/save + platform paths + `DefaultConfig()` seeding `MarkerSet`.
   - [internal/reassemble/](internal/reassemble/) — in-memory interrupted-thread reassembly.
-- ✅ The real sample log was removed (personal/sensitive). The committed synthetic fixture covers the format patterns.
+  - [internal/tags/](internal/tags/) — filename-keyed JSON sidecar (tags + notes).
+  - [internal/search/](internal/search/) — lazy in-memory inverted index, AND queries.
+  - [internal/logstore/](internal/logstore/) — registry + scanner + fsnotify watcher (`github.com/fsnotify/fsnotify`).
+  - [internal/i18n/](internal/i18n/) — embedded backend localizer (en/de).
+  - [api/](api/) — Wails binding layer: `App` + DTOs in [api/dto.go](api/dto.go); methods `GetConfig`/`SaveConfig`, `ScanLogs`, `GetLogList`, `GetLogEntries`, `GetLogThreads`, `Search`, `GetTags`/`SetTags`/`GetAllTagNames`, `GetLocaleMessages`. Emits `log:new`/`log:updated`/`log:removed` events. [main.go](main.go) binds `api.App` (scaffold placeholder removed).
+- ✅ The real sample log was removed (personal/sensitive). The committed synthetic fixtures cover the format patterns.
+- ✅ `go build ./...`, `go vet ./...`, `gofmt -l` all clean.
 
-## Next steps (plan order)
+## Next steps (frontend)
 
-1. **`internal/logstore`** — `store.go` (central registry, `LogMeta`, cache), `scanner.go` (directory scan + quick meta), `watcher.go` (fsnotify; needs `github.com/fsnotify/fsnotify`). (Next up.)
-2. **`internal/search`** — lazy in-memory inverted index + query.
-3. **`internal/tags`** — filename-keyed JSON sidecar CRUD (path from `config.TagsFilePath`).
-4. **`internal/i18n`** — `embed.FS` locale loader for backend strings; `locales/en.json`, `de.json`.
-5. **`api/app.go`** — replace placeholder `App.Greet` with bound methods/DTOs from the plan (`GetConfig`/`SaveConfig`, `ScanLogs`, `GetLogList`, `GetLogEntries`, `GetLogThreads`, `Search`, tags, `GetLocaleMessages`); wire the DTO mapping (LogEntry→EntryDTO with `highlight.Tokenize`); update `Bind` in `main.go`.
-6. Frontend components (LogList, LogViewer, EntryRow, Search, Tags, Settings) + vue-i18n.
-7. Build & smoke test (`wails build`).
+Backend is feature-complete for v1. Remaining work is the Vue 3 frontend:
+
+1. **Regenerate Wails bindings** — `wails generate module` (or just `wails dev`) refreshes `frontend/wailsjs/` from the new `api.App` (currently still the scaffold `App.Greet`).
+2. **Install frontend deps** — `pinia`, `vue-i18n`, `vue-virtual-scroller` (in `frontend/`, `npm install <pkg>`).
+3. **Components** (`frontend/src/components/`): `LogList.vue` (overview: date, participants, message count, duration, tags), `LogViewer.vue` (virtual-scrolled), `EntryRow.vue` (renders `spans` by type; channel styling; Raw/Reassembled toggle calling `GetLogThreads`), `SearchBar.vue` + `SearchResults.vue` (per-log linear filter vs. global `Search`), `TagEditor.vue`, `SettingsPanel.vue` (directories, language, mention names, markers, theme).
+4. **i18n** — vue-i18n with `frontend/src/locales/{en,de}.json`; merge backend strings from `GetLocaleMessages()` at startup.
+5. **Listen** for `log:new`/`log:updated`/`log:removed` runtime events to refresh the list/open log live.
+6. **Build & smoke test** — `wails dev` to iterate, `wails build` for the Windows binary.
+
+Backend call contract is stable; the frontend only consumes the DTOs in [api/dto.go](api/dto.go).
 
 ## Toolchain gotchas for the next session
 
