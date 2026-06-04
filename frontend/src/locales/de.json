@@ -1,0 +1,78 @@
+{
+  "app": {
+    "title": "Gobchat Log Browser",
+    "settings": "Einstellungen"
+  },
+  "nav": {
+    "logs": "Logs",
+    "rescan": "Neu scannen",
+    "scanning": "Scanne…",
+    "noLogs": "Keine Logs gefunden. Füge in den Einstellungen ein Verzeichnis hinzu oder prüfe den Gobchat-Log-Ordner."
+  },
+  "viewer": {
+    "messages": "{count} Nachrichten",
+    "raw": "Roh",
+    "reassembled": "Zusammengefügt",
+    "filter": "Dieses Log filtern…",
+    "loading": "Lädt…",
+    "selectPrompt": "Wähle links ein Log zum Anzeigen aus.",
+    "noEntries": "Keine Einträge passen zum Filter.",
+    "reassembling": "Füge zusammen…",
+    "noThreads": "Keine Threads passen zum Filter.",
+    "parts": "{count} Teile"
+  },
+  "search": {
+    "scopeAll": "Alle Logs",
+    "scopeCurrent": "Aktuelles Log",
+    "placeholder": "Suchen…",
+    "button": "Suchen",
+    "clear": "Zurücksetzen",
+    "searching": "Suche…",
+    "results": "{count} Treffer",
+    "noMatches": "Keine Treffer.",
+    "close": "Schließen"
+  },
+  "tags": {
+    "addTag": "Tag hinzufügen…",
+    "note": "Notiz…",
+    "save": "Speichern"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "logDirs": "Log-Verzeichnisse",
+    "autoDetect": "Gobchat-Log-Ordner automatisch erkennen",
+    "noDirs": "Keine zusätzlichen Verzeichnisse. Die automatische Erkennung deckt den Standardort ab.",
+    "addDir": "Verzeichnis hinzufügen…",
+    "remove": "Entfernen",
+    "theme": "Design",
+    "dark": "Dunkel",
+    "light": "Hell",
+    "language": "Sprache",
+    "mentions": "Meine Namen hervorheben (Mentions)",
+    "mentionsPlaceholder": "Ein Name pro Zeile…",
+    "markers": "Rollenspiel-Marker",
+    "markersHint": "Begrenzer zum Erkennen von Sprache, Emotes und OOC-Text. Standard entspricht Gobchat; bei Bedarf eigene ergänzen.",
+    "speech": "Sprache",
+    "emote": "Emote",
+    "ooc": "Out-of-Character",
+    "add": "+ Hinzufügen",
+    "open": "auf",
+    "close": "zu",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "saving": "Speichere…"
+  },
+  "setup": {
+    "welcome": "Willkommen beim Gobchat Log Browser",
+    "intro": "Lass uns alles einrichten. Du kannst das später jederzeit in den Einstellungen ändern.",
+    "language": "Sprache",
+    "theme": "Design",
+    "logFolder": "Log-Ordner",
+    "useDetected": "Erkannten Gobchat-Ordner verwenden",
+    "notFound": " (nicht gefunden)",
+    "chooseFolder": "Ordner wählen…",
+    "hint": "Wähle den Ordner, in dem deine Gobchat-Chatlogs gespeichert sind.",
+    "getStarted": "Los geht's",
+    "saving": "Speichere…"
+  }
+}

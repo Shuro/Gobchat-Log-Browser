@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { api } from '../../wailsjs/go/models'
 
+const { t } = useI18n()
 const props = defineProps<{ thread: api.ThreadDTO }>()
 
 const channelClass = computed(
@@ -21,6 +23,6 @@ const channelClass = computed(
         >{{ span.text }}</span
       >
     </span>
-    <span v-if="thread.lines.length > 1" class="part">{{ thread.lines.length }} parts</span>
+    <span v-if="thread.lines.length > 1" class="part">{{ t('viewer.parts', { count: thread.lines.length }) }}</span>
   </div>
 </template>

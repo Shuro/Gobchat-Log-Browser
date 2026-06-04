@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useSearchStore } from '../stores/search'
 import { useLogsStore } from '../stores/logs'
 import type { api } from '../../wailsjs/go/models'
 
+const { t } = useI18n()
 const search = useSearchStore()
 const logs = useLogsStore()
 
@@ -43,13 +45,13 @@ function open(hit: api.SearchResultDTO) {
 <template>
   <div class="search-results">
     <header class="results-header">
-      <span v-if="search.loading">Searching…</span>
-      <span v-else>{{ search.results.length }} result(s)</span>
-      <button class="ghost" @click="search.clear()">Close</button>
+      <span v-if="search.loading">{{ t('search.searching') }}</span>
+      <span v-else>{{ t('search.results', { count: search.results.length }) }}</span>
+      <button class="ghost" @click="search.clear()">{{ t('search.close') }}</button>
     </header>
 
     <div v-if="!search.loading && search.results.length === 0" class="placeholder">
-      No matches.
+      {{ t('search.noMatches') }}
     </div>
 
     <div v-else class="results-body">

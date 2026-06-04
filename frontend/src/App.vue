@@ -12,7 +12,9 @@ import SearchBar from './components/SearchBar.vue'
 import SearchResults from './components/SearchResults.vue'
 import SettingsPanel from './components/SettingsPanel.vue'
 import SetupWizard from './components/SetupWizard.vue'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const store = useLogsStore()
 const search = useSearchStore()
 const config = useConfigStore()
@@ -55,9 +57,9 @@ function onSetupDone() {
 <template>
   <div class="app">
     <header class="app-header">
-      <h1>Gobchat Log Browser</h1>
+      <h1>{{ t('app.title') }}</h1>
       <SearchBar />
-      <button class="icon-btn" title="Settings" @click="showSettings = true">⚙</button>
+      <button class="icon-btn" :title="t('app.settings')" @click="showSettings = true">⚙</button>
     </header>
     <main class="app-body">
       <LogList />

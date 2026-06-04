@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useLogsStore } from '../stores/logs'
 
+const { t } = useI18n()
 const store = useLogsStore()
 
 const draftTags = ref<string[]>([])
@@ -50,7 +52,7 @@ async function save() {
         v-model="newTag"
         class="tag-input"
         list="all-tags"
-        placeholder="Add tag…"
+        :placeholder="t('tags.addTag')"
         @keyup.enter="addTag"
       />
       <datalist id="all-tags">
@@ -60,9 +62,9 @@ async function save() {
     <input
       v-model="draftNote"
       class="note-input"
-      placeholder="Note…"
+      :placeholder="t('tags.note')"
       @input="dirty = true"
     />
-    <button :disabled="!dirty" @click="save">Save</button>
+    <button :disabled="!dirty" @click="save">{{ t('tags.save') }}</button>
   </div>
 </template>

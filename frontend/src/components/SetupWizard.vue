@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useConfigStore } from '../stores/config'
 import { PickDirectory } from '../../wailsjs/go/api/App'
 import type { api } from '../../wailsjs/go/models'
@@ -8,6 +9,7 @@ import { applyTheme } from '../composables/theme'
 const props = defineProps<{ state: api.SetupState }>()
 const emit = defineEmits<{ (e: 'done'): void }>()
 
+const { t, locale } = useI18n()
 const config = useConfigStore()
 
 const language = ref('en')
@@ -23,8 +25,11 @@ onMounted(async () => {
   }
 })
 
-// Live theme preview.
-watch(theme, (t) => applyTheme(t))
+// Live previews while choosing.
+watch(theme, (val) => applyTheme(val))
+watch(language, (val) => {
+  locale.value = val === 'de' ? 'de' : 'en'
+})
 
 const hasLogDir = computed(
   () => (useDetected.value && props.state.default_log_dir_exists) || chosenDir.value !== '',
@@ -51,11 +56,11 @@ async function finish() {
 <template>
   <div class="wizard-backdrop">
     <div class="wizard">
-      <h2>Welcome to Gobchat Log Browser</h2>
-      <p class="muted">Let's set things up. You can change all of this later in Settings.</p>
+      <h2>{{ t('setup.welcome') }}</h2>
+      <p class="muted">{{ t('setup.intro') }}</p>
 
       <section>
-        <h3>Language</h3>
+        <h3>{{ t('setup.language') }}</h3>
         <select v-model="language">
           <option value="en">English</option>
           <option value="de">Deutsch</option>
@@ -63,36 +68,34 @@ async function finish() {
       </section>
 
       <section>
-        <h3>Theme</h3>
+        <h3>{{ t('setup.theme') }}</h3>
         <select v-model="theme">
-          <option value="dark">Dark</option>
-          <option value="light">Light</option>
+          <option value="dark">{{ t('settings.dark') }}</option>
+          <option value="light">{{ t('settings.light') }}</option>
         </select>
       </section>
 
       <section>
-        <h3>Log folder</h3>
+        <h3>{{ t('setup.logFolder') }}</h3>
         <label v-if="state.default_log_dir_exists" class="check">
           <input type="checkbox" v-model="useDetected" />
-          Use the detected Gobchat folder
+          {{ t('setup.useDetected') }}
         </label>
         <p v-if="state.default_log_dir" class="detected-path muted">
           {{ state.default_log_dir }}
-          <span v-if="!state.default_log_dir_exists"> (not found)</span>
+          <span v-if="!state.default_log_dir_exists">{{ t('setup.notFound') }}</span>
         </p>
 
         <div class="chosen">
-          <button @click="pick">Choose a folder…</button>
+          <button @click="pick">{{ t('setup.chooseFolder') }}</button>
           <span v-if="chosenDir" class="dir-path">{{ chosenDir }}</span>
         </div>
-        <p v-if="!hasLogDir" class="muted hint">
-          Pick the folder where your Gobchat chat logs are stored.
-        </p>
+        <p v-if="!hasLogDir" class="muted hint">{{ t('setup.hint') }}</p>
       </section>
 
       <footer class="wizard-footer">
         <button :disabled="!hasLogDir || config.saving" @click="finish">
-          {{ config.saving ? 'Saving…' : 'Get started' }}
+          {{ config.saving ? t('setup.saving') : t('setup.getStarted') }}
         </button>
       </footer>
     </div>

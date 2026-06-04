@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import { useLogsStore } from '../stores/logs'
@@ -7,6 +8,7 @@ import EntryRow from './EntryRow.vue'
 import ThreadRow from './ThreadRow.vue'
 import TagEditor from './TagEditor.vue'
 
+const { t } = useI18n()
 const store = useLogsStore()
 const scroller = ref<any>(null)
 
@@ -37,7 +39,7 @@ watch(
       <header class="viewer-header">
         <div class="viewer-title">
           <strong>{{ store.selectedSummary.file_name }}</strong>
-          <span class="muted">{{ store.selectedSummary.message_count }} messages</span>
+          <span class="muted">{{ t('viewer.messages', { count: store.selectedSummary.message_count }) }}</span>
         </div>
         <div class="viewer-controls">
           <div class="mode-toggle">
@@ -45,36 +47,36 @@ watch(
               :class="{ active: store.viewMode === 'raw' }"
               @click="store.setViewMode('raw')"
             >
-              Raw
+              {{ t('viewer.raw') }}
             </button>
             <button
               :class="{ active: store.viewMode === 'reassembled' }"
               @click="store.setViewMode('reassembled')"
             >
-              Reassembled
+              {{ t('viewer.reassembled') }}
             </button>
           </div>
           <input
             v-model="store.filterText"
             class="filter"
             type="search"
-            placeholder="Filter this log…"
+            :placeholder="t('viewer.filter')"
           />
         </div>
       </header>
       <TagEditor />
     </template>
 
-    <div v-if="store.loadingEntries" class="placeholder">Loading…</div>
+    <div v-if="store.loadingEntries" class="placeholder">{{ t('viewer.loading') }}</div>
     <div v-else-if="store.error" class="placeholder error">{{ store.error }}</div>
     <div v-else-if="!store.selectedPath" class="placeholder">
-      Select a log on the left to view it.
+      {{ t('viewer.selectPrompt') }}
     </div>
 
     <!-- Raw view -->
     <template v-else-if="store.viewMode === 'raw'">
       <div v-if="store.visibleEntries.length === 0" class="placeholder">
-        No entries match the filter.
+        {{ t('viewer.noEntries') }}
       </div>
       <DynamicScroller
         v-else
@@ -99,9 +101,9 @@ watch(
 
     <!-- Reassembled view -->
     <template v-else>
-      <div v-if="store.loadingThreads" class="placeholder">Reassembling…</div>
+      <div v-if="store.loadingThreads" class="placeholder">{{ t('viewer.reassembling') }}</div>
       <div v-else-if="threadItems.length === 0" class="placeholder">
-        No threads match the filter.
+        {{ t('viewer.noThreads') }}
       </div>
       <DynamicScroller
         v-else

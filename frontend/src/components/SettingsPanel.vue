@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useConfigStore } from '../stores/config'
 
+const { t } = useI18n()
 const emit = defineEmits<{ (e: 'close'): void }>()
 const config = useConfigStore()
 
@@ -9,11 +11,7 @@ onMounted(() => {
   if (!config.cfg) config.load()
 })
 
-const markerCategories: Array<{ key: 'speech' | 'emote' | 'ooc'; label: string }> = [
-  { key: 'speech', label: 'Speech' },
-  { key: 'emote', label: 'Emote' },
-  { key: 'ooc', label: 'Out-of-character' },
-]
+const markerCategories: Array<'speech' | 'emote' | 'ooc'> = ['speech', 'emote', 'ooc']
 
 // Mention names edited as one-per-line text.
 const mentionsText = computed<string>({
@@ -45,43 +43,43 @@ async function save() {
   <div class="settings-backdrop" @click.self="emit('close')">
     <div class="settings-panel">
       <header class="settings-header">
-        <strong>Settings</strong>
+        <strong>{{ t('settings.title') }}</strong>
         <button class="ghost" @click="emit('close')">✕</button>
       </header>
 
-      <div v-if="!config.cfg" class="placeholder">Loading…</div>
+      <div v-if="!config.cfg" class="placeholder">{{ t('viewer.loading') }}</div>
 
       <div v-else class="settings-body">
         <!-- Directories -->
         <section>
-          <h3>Log directories</h3>
+          <h3>{{ t('settings.logDirs') }}</h3>
           <label class="check">
             <input type="checkbox" v-model="config.cfg.auto_detect_appdata" />
-            Auto-detect the Gobchat log folder
+            {{ t('settings.autoDetect') }}
           </label>
           <ul class="dir-list">
             <li v-for="d in config.cfg.log_directories" :key="d">
               <span class="dir-path">{{ d }}</span>
-              <button class="ghost" @click="config.removeDirectory(d)">Remove</button>
+              <button class="ghost" @click="config.removeDirectory(d)">{{ t('settings.remove') }}</button>
             </li>
             <li v-if="config.cfg.log_directories.length === 0" class="muted">
-              No extra directories. Auto-detect covers the default location.
+              {{ t('settings.noDirs') }}
             </li>
           </ul>
-          <button @click="config.addDirectory()">Add directory…</button>
+          <button @click="config.addDirectory()">{{ t('settings.addDir') }}</button>
         </section>
 
         <!-- Appearance & language -->
         <section class="grid-2">
           <div>
-            <h3>Theme</h3>
+            <h3>{{ t('settings.theme') }}</h3>
             <select v-model="config.cfg.theme">
-              <option value="dark">Dark</option>
-              <option value="light">Light</option>
+              <option value="dark">{{ t('settings.dark') }}</option>
+              <option value="light">{{ t('settings.light') }}</option>
             </select>
           </div>
           <div>
-            <h3>Language</h3>
+            <h3>{{ t('settings.language') }}</h3>
             <select v-model="config.cfg.language">
               <option value="en">English</option>
               <option value="de">Deutsch</option>
@@ -91,44 +89,41 @@ async function save() {
 
         <!-- Mentions -->
         <section>
-          <h3>Highlight my names (mentions)</h3>
+          <h3>{{ t('settings.mentions') }}</h3>
           <textarea
             v-model="mentionsText"
             class="mentions"
             rows="3"
-            placeholder="One name per line…"
+            :placeholder="t('settings.mentionsPlaceholder')"
           ></textarea>
         </section>
 
         <!-- RP markers -->
         <section>
-          <h3>Roleplay markers</h3>
-          <p class="muted">
-            Delimiters used to detect speech, emotes and OOC text. Defaults match
-            Gobchat; add your own as needed.
-          </p>
-          <div v-for="cat in markerCategories" :key="cat.key" class="marker-group">
+          <h3>{{ t('settings.markers') }}</h3>
+          <p class="muted">{{ t('settings.markersHint') }}</p>
+          <div v-for="cat in markerCategories" :key="cat" class="marker-group">
             <div class="marker-group-head">
-              <span>{{ cat.label }}</span>
-              <button class="ghost" @click="addPair(cat.key)">+ Add</button>
+              <span>{{ t('settings.' + cat) }}</span>
+              <button class="ghost" @click="addPair(cat)">{{ t('settings.add') }}</button>
             </div>
             <div
-              v-for="(pair, i) in config.cfg.markers[cat.key]"
+              v-for="(pair, i) in config.cfg.markers[cat]"
               :key="i"
               class="marker-row"
             >
-              <input v-model="pair.open" class="marker-input" placeholder="open" />
-              <input v-model="pair.close" class="marker-input" placeholder="close" />
-              <button class="ghost" @click="removePair(cat.key, i)">✕</button>
+              <input v-model="pair.open" class="marker-input" :placeholder="t('settings.open')" />
+              <input v-model="pair.close" class="marker-input" :placeholder="t('settings.close')" />
+              <button class="ghost" @click="removePair(cat, i)">✕</button>
             </div>
           </div>
         </section>
       </div>
 
       <footer class="settings-footer">
-        <button class="ghost" @click="emit('close')">Cancel</button>
+        <button class="ghost" @click="emit('close')">{{ t('settings.cancel') }}</button>
         <button :disabled="config.saving || !config.cfg" @click="save">
-          {{ config.saving ? 'Saving…' : 'Save' }}
+          {{ config.saving ? t('settings.saving') : t('settings.save') }}
         </button>
       </footer>
     </div>

@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { useLogsStore } from '../stores/logs'
 
+const { t } = useI18n()
 const store = useLogsStore()
 
 function formatDate(iso: string): string {
@@ -13,13 +15,13 @@ function formatDate(iso: string): string {
 <template>
   <aside class="log-list">
     <header class="list-header">
-      <strong>Logs</strong>
-      <button :disabled="store.loadingList" @click="store.rescan()">Rescan</button>
+      <strong>{{ t('nav.logs') }}</strong>
+      <button :disabled="store.loadingList" @click="store.rescan()">{{ t('nav.rescan') }}</button>
     </header>
 
-    <div v-if="store.loadingList" class="placeholder">Scanning…</div>
+    <div v-if="store.loadingList" class="placeholder">{{ t('nav.scanning') }}</div>
     <div v-else-if="store.summaries.length === 0" class="placeholder">
-      No logs found. Add a directory in Settings or check the Gobchat log folder.
+      {{ t('nav.noLogs') }}
     </div>
 
     <ul v-else class="list">
