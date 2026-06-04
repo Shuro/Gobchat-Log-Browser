@@ -1,0 +1,9 @@
+Chatlogger Id: CCLv1
+Chatlogger format:{channel} [{date} {time-full}] {sender}: {message}
+GobchatInfo [2026-01-02 20:00:00+01:00] Gobchat: FFXIV detected.
+Say [2026-01-02 20:01:00+01:00] ★Alpha Tester [Shiva]: "Hello there." She waves a little. (1/2)
+Say [2026-01-02 20:01:05+01:00] ★Alpha Tester [Shiva]: And continues speaking calmly. (2/2)
+Emote [2026-01-02 20:02:00+01:00] Beta User: ponders the question for a moment >
+Say [2026-01-02 20:02:30+01:00] Beta User: "> and finally answers it." ((quick ooc note))
+Party [2026-01-02 20:03:00+01:00] ♥Gamma Person [Moogle]: «Bonjour» said with a smile.
+???this line is malformed and should not match the format???
