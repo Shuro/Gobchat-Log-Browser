@@ -1,0 +1,6 @@
+Chatlogger Id: CCLv1
+Chatlogger format:{channel} [{date} {time-full}] {sender}: {message}
+GobchatInfo [2026-01-02 20:00:00+01:00] Gobchat: FFXIV detected.
+Say [2026-01-02 20:01:00+01:00] ★Alpha Tester [Shiva]: "Good evening."
+Emote [2026-01-02 20:05:00+01:00] Beta User: nods slowly.
+Say [2026-01-02 20:31:00+01:00] ★Alpha Tester [Shiva]: "Until next time."
