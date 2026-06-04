@@ -38,20 +38,23 @@ Say [2026-05-16 20:09:30+02:00] ★M'iqo Tester [Shiva]: "Hello..." (1/2)
 - ✅ Toolchain installed: **Go 1.26.4**, **Node 24.16.0**, **npm 11.13.0**, **Wails CLI v2.12.0**. `wails doctor` clean (WebView2 present).
 - ✅ Seven ADRs + template written under [docs/adr/](docs/adr/).
 - ✅ Wails Vue-TS project scaffolded and merged into repo root (module `gobchat-log-browser`). Standard scaffold: [main.go](main.go), [app.go](app.go) (still has placeholder `Greet`), [frontend/](frontend/), [wails.json](wails.json).
-- ✅ `go build ./...` passes.
+- ✅ Git hygiene: [.gitignore](.gitignore) (sensitive `*.log` excluded; `testdata/*.log` exempt) and [.gitattributes](.gitattributes) (LF). History is committed in logical commits.
+- ✅ **Backend core packages implemented, tested (`go test ./internal/...` green), and committed:**
+  - [internal/highlight/](internal/highlight/) — configurable RP tokenizer → flat `[]Span` (speech/emote/ooc/mention).
+  - [internal/parser/](internal/parser/) — CCLv1/FCLv1 format→regex, `Parse`→`ParsedLog`; sender split (symbol/name/realm); heuristic part/continuation; unmatched lines → `ChannelUnknown` (never dropped). Synthetic fixture in `internal/parser/testdata/sample.log`.
+  - [internal/config/](internal/config/) — `Config` + atomic load/save + platform paths + `DefaultConfig()` seeding `MarkerSet`.
+  - [internal/reassemble/](internal/reassemble/) — in-memory interrupted-thread reassembly.
+- ✅ The real sample log was removed (personal/sensitive). The committed synthetic fixture covers the format patterns.
 
-## Next steps (plan order, Phase 1 onward)
+## Next steps (plan order)
 
-The plan's Phase-1 step 0 (ADRs) is done. Continue:
-
-1. **`internal/config`** — `Config` struct, atomic load/save, platform paths (`paths.go`), `DefaultConfig()` seeding the configurable `MarkerSet`. (Next up.)
-2. **`internal/parser`** — `entry.go` (LogEntry + Channel consts incl. `ChannelUnknown`), `format.go` (CCLv1 format string → named-capture regex), `parser.go` (`Parse` → `ParsedLog`, never drops lines). Table-driven tests against the sample log.
-3. **`internal/highlight`** — stateful RP tokenizer → flat `[]Span`; `MarkerSet`/`MarkerPair` types; mention-splitting. Tests for all default styles + a custom marker set.
-4. **`internal/reassemble`** — in-memory thread reassembly (optional Raw/Reassembled view).
-5. `internal/logstore`, `internal/search`, `internal/tags`, `internal/i18n`.
-6. **`api/app.go`** — replace placeholder `App.Greet` with the bound methods/DTOs from the plan (`ScanLogs`, `GetLogEntries`, `GetLogThreads`, `Search`, tags, `GetLocaleMessages`); update `Bind` in `main.go`.
-7. Frontend components (LogList, LogViewer, EntryRow, Search, Tags, Settings) + vue-i18n.
-8. Build & smoke test.
+1. **`internal/logstore`** — `store.go` (central registry, `LogMeta`, cache), `scanner.go` (directory scan + quick meta), `watcher.go` (fsnotify; needs `github.com/fsnotify/fsnotify`). (Next up.)
+2. **`internal/search`** — lazy in-memory inverted index + query.
+3. **`internal/tags`** — filename-keyed JSON sidecar CRUD (path from `config.TagsFilePath`).
+4. **`internal/i18n`** — `embed.FS` locale loader for backend strings; `locales/en.json`, `de.json`.
+5. **`api/app.go`** — replace placeholder `App.Greet` with bound methods/DTOs from the plan (`GetConfig`/`SaveConfig`, `ScanLogs`, `GetLogList`, `GetLogEntries`, `GetLogThreads`, `Search`, tags, `GetLocaleMessages`); wire the DTO mapping (LogEntry→EntryDTO with `highlight.Tokenize`); update `Bind` in `main.go`.
+6. Frontend components (LogList, LogViewer, EntryRow, Search, Tags, Settings) + vue-i18n.
+7. Build & smoke test (`wails build`).
 
 ## Toolchain gotchas for the next session
 
