@@ -48,6 +48,15 @@ type ThreadDTO struct {
 	EndTime   string           `json:"end_time"`
 }
 
+// SetupState tells the frontend whether to show the first-run setup wizard and
+// provides the detected Gobchat log directory to prefill it.
+type SetupState struct {
+	NeedsSetup          bool   `json:"needs_setup"`
+	ConfigExists        bool   `json:"config_exists"`
+	DefaultLogDir       string `json:"default_log_dir"`
+	DefaultLogDirExists bool   `json:"default_log_dir_exists"`
+}
+
 // SearchResultDTO is one search hit, enriched with entry context.
 type SearchResultDTO struct {
 	FilePath   string `json:"file_path"`

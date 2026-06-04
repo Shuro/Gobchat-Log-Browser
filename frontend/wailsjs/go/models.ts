@@ -108,6 +108,24 @@ export namespace api {
 	        this.score = source["score"];
 	    }
 	}
+	export class SetupState {
+	    needs_setup: boolean;
+	    config_exists: boolean;
+	    default_log_dir: string;
+	    default_log_dir_exists: boolean;
+	
+	    static createFrom(source: any = {}) {
+	        return new SetupState(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.needs_setup = source["needs_setup"];
+	        this.config_exists = source["config_exists"];
+	        this.default_log_dir = source["default_log_dir"];
+	        this.default_log_dir_exists = source["default_log_dir_exists"];
+	    }
+	}
 	export class ThreadDTO {
 	    sender: string;
 	    channel: string;

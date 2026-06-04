@@ -123,6 +123,70 @@ button.ghost {
   padding: 5px 9px;
 }
 
+/* --- Setup wizard --- */
+.wizard-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+}
+.wizard {
+  width: 460px;
+  max-width: 92vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 22px 24px;
+}
+.wizard h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+.wizard section {
+  margin-top: 18px;
+}
+.wizard h3 {
+  margin: 0 0 6px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+.wizard select {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  min-width: 160px;
+}
+.wizard .detected-path {
+  font-size: 12px;
+  word-break: break-all;
+  margin: 4px 0;
+}
+.wizard .chosen {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+.wizard .hint {
+  margin-top: 8px;
+  font-size: 12px;
+}
+.wizard-footer {
+  margin-top: 22px;
+  display: flex;
+  justify-content: flex-end;
+}
+
 /* --- Settings panel --- */
 .settings-backdrop {
   position: fixed;

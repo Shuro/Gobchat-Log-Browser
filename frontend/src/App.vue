@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
 import { EventsOn } from '../wailsjs/runtime/runtime'
+import { GetSetupState } from '../wailsjs/go/api/App'
+import type { api } from '../wailsjs/go/models'
 import { useLogsStore } from './stores/logs'
 import { useSearchStore } from './stores/search'
 import { useConfigStore } from './stores/config'
@@ -9,16 +11,23 @@ import LogViewer from './components/LogViewer.vue'
 import SearchBar from './components/SearchBar.vue'
 import SearchResults from './components/SearchResults.vue'
 import SettingsPanel from './components/SettingsPanel.vue'
+import SetupWizard from './components/SetupWizard.vue'
 
 const store = useLogsStore()
 const search = useSearchStore()
 const config = useConfigStore()
 const showSettings = ref(false)
+const setupState = ref<api.SetupState | null>(null)
 const unsubscribers: Array<() => void> = []
 
-onMounted(() => {
+onMounted(async () => {
   // Load config first so the theme is applied immediately.
-  config.load()
+  await config.load()
+
+  // First-run check: show the setup wizard if there is no config yet or no
+  // usable log directory.
+  setupState.value = await GetSetupState()
+
   // The backend scans on startup; pull whatever is ready now…
   store.refreshList()
   store.loadAllTagNames()
@@ -36,6 +45,11 @@ onMounted(() => {
 onUnmounted(() => {
   unsubscribers.forEach((off) => off())
 })
+
+function onSetupDone() {
+  if (setupState.value) setupState.value.needs_setup = false
+  store.refreshList()
+}
 </script>
 
 <template>
@@ -53,5 +67,10 @@ onUnmounted(() => {
       </div>
     </main>
     <SettingsPanel v-if="showSettings" @close="showSettings = false" />
+    <SetupWizard
+      v-if="setupState && setupState.needs_setup"
+      :state="setupState"
+      @done="onSetupDone"
+    />
   </div>
 </template>

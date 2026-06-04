@@ -7,6 +7,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -252,6 +253,42 @@ func (a *App) SetTags(fileName string, tagList []string, note string) error {
 }
 
 func (a *App) GetAllTagNames() []string { return a.tags.AllTags() }
+
+// --- First-run setup ---
+
+// GetSetupState reports whether the first-run wizard should be shown. It is
+// needed when no config file exists yet, or when there is no usable log
+// directory (the detected default does not exist and no configured directory
+// exists). It also returns the detected default directory to prefill the wizard.
+func (a *App) GetSetupState() SetupState {
+	a.mu.RLock()
+	cfgPath := a.configPath
+	cfg := a.cfg
+	a.mu.RUnlock()
+
+	st := SetupState{}
+	if cfgPath != "" {
+		if _, err := os.Stat(cfgPath); err == nil {
+			st.ConfigExists = true
+		}
+	}
+	if def, err := config.GobchatDefaultLogDir(); err == nil {
+		st.DefaultLogDir = def
+		if fi, statErr := os.Stat(def); statErr == nil && fi.IsDir() {
+			st.DefaultLogDirExists = true
+		}
+	}
+
+	anyConfigured := false
+	for _, d := range cfg.LogDirectories {
+		if fi, err := os.Stat(d); err == nil && fi.IsDir() {
+			anyConfigured = true
+			break
+		}
+	}
+	st.NeedsSetup = !st.ConfigExists || (!st.DefaultLogDirExists && !anyConfigured)
+	return st
+}
 
 // --- Dialogs ---
 

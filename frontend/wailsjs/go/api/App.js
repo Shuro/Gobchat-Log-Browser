@@ -26,6 +26,10 @@ export function GetLogThreads(arg1) {
   return window['go']['api']['App']['GetLogThreads'](arg1);
 }
 
+export function GetSetupState() {
+  return window['go']['api']['App']['GetSetupState']();
+}
+
 export function GetTags(arg1) {
   return window['go']['api']['App']['GetTags'](arg1);
 }

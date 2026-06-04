@@ -16,6 +16,8 @@ export function GetLogList():Promise<Array<api.LogSummary>>;
 
 export function GetLogThreads(arg1:string):Promise<Array<api.ThreadDTO>>;
 
+export function GetSetupState():Promise<api.SetupState>;
+
 export function GetTags(arg1:string):Promise<tags.FileTags>;
 
 export function PickDirectory():Promise<string>;
