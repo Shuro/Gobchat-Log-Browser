@@ -1,10 +1,28 @@
 <script setup lang="ts">
+import { ref, watch, nextTick } from 'vue'
 import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import { useLogsStore } from '../stores/logs'
 import EntryRow from './EntryRow.vue'
 
 const store = useLogsStore()
+const scroller = ref<any>(null)
+
+// When a search result targets a line, scroll it into view and briefly
+// highlight it. Runs after entries are loaded/rendered.
+watch(
+  () => [store.targetLine, store.entries] as const,
+  async () => {
+    const line = store.targetLine
+    if (line == null) return
+    await nextTick()
+    const idx = store.visibleEntries.findIndex((e) => e.line_number === line)
+    if (idx >= 0 && scroller.value?.scrollToItem) {
+      scroller.value.scrollToItem(idx)
+    }
+  },
+  { flush: 'post' },
+)
 </script>
 
 <template>
@@ -33,6 +51,7 @@ const store = useLogsStore()
 
     <DynamicScroller
       v-else
+      ref="scroller"
       :items="store.visibleEntries"
       :min-item-size="28"
       key-field="line_number"
@@ -45,7 +64,7 @@ const store = useLogsStore()
           :data-index="index"
           :size-dependencies="[item.message]"
         >
-          <EntryRow :entry="item" />
+          <EntryRow :entry="item" :highlight="item.line_number === store.targetLine" />
         </DynamicScrollerItem>
       </template>
     </DynamicScroller>

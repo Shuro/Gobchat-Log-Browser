@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import type { api } from '../../wailsjs/go/models'
 
-const props = defineProps<{ entry: api.EntryDTO }>()
+const props = defineProps<{ entry: api.EntryDTO; highlight?: boolean }>()
 
 const time = computed(() => {
   if (!props.entry.timestamp) return ''
@@ -17,7 +17,7 @@ const isUnknown = computed(() => props.entry.channel === 'Unknown')
 </script>
 
 <template>
-  <div class="entry" :class="channelClass">
+  <div class="entry" :class="[channelClass, { target: highlight }]">
     <span class="time">{{ time }}</span>
     <span class="channel-tag">{{ entry.channel }}</span>
     <span v-if="!isUnknown" class="sender" :title="entry.sender">

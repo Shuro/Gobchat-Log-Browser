@@ -15,6 +15,10 @@ export const useLogsStore = defineStore('logs', () => {
   const loadingEntries = ref(false)
   const error = ref<string | null>(null)
 
+  // When a search result is opened, the viewer scrolls to and highlights this
+  // line number; it is cleared once consumed / after a moment.
+  const targetLine = ref<number | null>(null)
+
   // Per-log filter text (matches message or sender, case-insensitive).
   const filterText = ref('')
 
@@ -50,19 +54,30 @@ export const useLogsStore = defineStore('logs', () => {
     }
   }
 
-  async function openLog(path: string) {
+  async function openLog(path: string, line: number | null = null) {
+    // Re-opening the same log to jump to a line: keep entries, just retarget.
+    if (path === selectedPath.value && entries.value.length > 0) {
+      targetLine.value = line
+      return
+    }
     selectedPath.value = path
     loadingEntries.value = true
     error.value = null
     filterText.value = ''
+    targetLine.value = null
     try {
       entries.value = await GetLogEntries(path)
+      targetLine.value = line
     } catch (e: unknown) {
       error.value = String(e)
       entries.value = []
     } finally {
       loadingEntries.value = false
     }
+  }
+
+  function clearTarget() {
+    targetLine.value = null
   }
 
   return {
@@ -75,8 +90,10 @@ export const useLogsStore = defineStore('logs', () => {
     loadingEntries,
     error,
     filterText,
+    targetLine,
     refreshList,
     rescan,
     openLog,
+    clearTarget,
   }
 })

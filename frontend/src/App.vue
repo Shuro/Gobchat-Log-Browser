@@ -2,10 +2,14 @@
 import { onMounted, onUnmounted } from 'vue'
 import { EventsOn } from '../wailsjs/runtime/runtime'
 import { useLogsStore } from './stores/logs'
+import { useSearchStore } from './stores/search'
 import LogList from './components/LogList.vue'
 import LogViewer from './components/LogViewer.vue'
+import SearchBar from './components/SearchBar.vue'
+import SearchResults from './components/SearchResults.vue'
 
 const store = useLogsStore()
+const search = useSearchStore()
 const unsubscribers: Array<() => void> = []
 
 onMounted(() => {
@@ -33,10 +37,14 @@ onUnmounted(() => {
   <div class="app">
     <header class="app-header">
       <h1>Gobchat Log Browser</h1>
+      <SearchBar />
     </header>
     <main class="app-body">
       <LogList />
-      <LogViewer />
+      <div class="main-pane">
+        <LogViewer />
+        <SearchResults v-if="search.ran" />
+      </div>
     </main>
   </div>
 </template>

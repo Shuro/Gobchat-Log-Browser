@@ -58,6 +58,9 @@ body {
 
 .app-header {
   flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
   padding: 8px 16px;
   border-bottom: 1px solid var(--border);
   background: var(--bg-panel);
@@ -66,6 +69,115 @@ body {
   margin: 0;
   font-size: 16px;
   font-weight: 700;
+  white-space: nowrap;
+}
+
+/* --- Search bar --- */
+.search-bar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex: 1 1 auto;
+  max-width: 720px;
+}
+.search-bar .scope {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 6px;
+}
+.search-input {
+  flex: 1 1 auto;
+  padding: 5px 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+}
+button.ghost {
+  background: transparent;
+}
+
+/* The viewer pane hosts the search-results overlay. */
+.main-pane {
+  position: relative;
+  display: flex;
+  min-height: 0;
+}
+.main-pane > .viewer {
+  flex: 1 1 auto;
+}
+
+/* --- Search results overlay --- */
+.search-results {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  z-index: 5;
+}
+.results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.results-body {
+  overflow-y: auto;
+}
+.result-group {
+  border-bottom: 1px solid var(--border);
+}
+.result-file {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding: 6px 12px;
+  background: var(--bg-panel);
+  position: sticky;
+  top: 0;
+}
+.result-file .muted {
+  color: var(--text-muted);
+  margin-left: auto;
+}
+.folder-inline {
+  font-size: 11px;
+  color: var(--accent);
+}
+.result-group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.result-group li {
+  display: flex;
+  gap: 10px;
+  padding: 4px 16px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.result-group li:hover {
+  background: var(--bg-elevated);
+}
+.hit-sender {
+  flex: 0 0 auto;
+  font-weight: 700;
+  color: var(--text-muted);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hit-snippet {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .app-body {
@@ -201,6 +313,10 @@ body {
 }
 .entry:hover {
   background: rgba(255, 255, 255, 0.03);
+}
+.entry.target {
+  background: rgba(90, 169, 230, 0.18);
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 .entry .time {
   flex: 0 0 auto;
