@@ -36,28 +36,52 @@ type App struct {
 	store   *logstore.LogStore
 	tags    *tags.TagStore
 	loc     *i18n.Localizer
-	watcher *logstore.Watcher
+
+	// watcherMu serializes startWatcher's close-old/create-new swap; a.mu still
+	// guards the watcher field itself (Shutdown only closes, so it needs a.mu only).
+	watcherMu sync.Mutex
+	watcher   *logstore.Watcher
+
+	// debounce coalesces the burst of Write events fsnotify reports while a log
+	// is actively being appended to, so each burst causes one re-parse.
+	debounceMu sync.Mutex
+	debounce   map[string]*time.Timer
 }
+
+// fileChangeDebounce is how long a file must stay quiet after a Write event
+// before it is re-parsed and the frontend is notified.
+const fileChangeDebounce = 300 * time.Millisecond
 
 // NewApp allocates the App. Heavy initialisation happens in Startup, once Wails
 // provides the context.
 func NewApp() *App {
-	return &App{}
+	return &App{debounce: map[string]*time.Timer{}}
 }
 
 // Startup is wired to Wails OnStartup. It loads config and tags, builds the
 // search index and log store, performs an initial scan, and starts watching.
+// Load failures fall back to safe defaults but are reported in a warning
+// dialog rather than swallowed.
 func (a *App) Startup(ctx context.Context) {
 	a.ctx = ctx
 
 	cfgPath, _ := config.ConfigFilePath()
 	a.configPath = cfgPath
-	cfg, _ := config.Load(cfgPath)
+	cfg, cfgErr := config.Load(cfgPath)
 
 	tagsPath, _ := config.TagsFilePath()
-	tagStore, err := tags.NewTagStore(tagsPath)
-	if err != nil {
-		tagStore, _ = tags.NewTagStore(tagsPath + ".recovered")
+	tagStore, tagsErr := tags.NewTagStore(tagsPath)
+	corruptTagsPath := tagsPath + ".corrupt"
+	if tagsErr != nil {
+		// Preserve the unreadable sidecar instead of silently forking to a
+		// different file, then start fresh at the canonical path so future
+		// saves land where the next load looks.
+		if os.Rename(tagsPath, corruptTagsPath) == nil {
+			tagStore, _ = tags.NewTagStore(tagsPath)
+		}
+		if tagStore == nil {
+			tagStore = tags.NewEmptyTagStore(tagsPath)
+		}
 	}
 
 	loc, _ := i18n.New(cfg.Language)
@@ -69,6 +93,25 @@ func (a *App) Startup(ctx context.Context) {
 	a.index = search.NewIndex()
 	a.store = logstore.New(a.index)
 	a.mu.Unlock()
+
+	var warnings []string
+	if cfgErr != nil {
+		warnings = append(warnings, a.t("warn.configLoadFailed"))
+	}
+	if tagsErr != nil {
+		warnings = append(warnings, fmt.Sprintf(a.t("warn.tagsLoadFailed"), corruptTagsPath))
+	}
+	if len(warnings) > 0 {
+		// Off the startup path so the window appears first; runtime dialogs are
+		// safe to call from goroutines.
+		go func() {
+			_, _ = wruntime.MessageDialog(a.ctx, wruntime.MessageDialogOptions{
+				Type:    wruntime.WarningDialog,
+				Title:   a.t("warn.startupTitle"),
+				Message: strings.Join(warnings, "\n"),
+			})
+		}()
+	}
 
 	// The initial scan can touch hundreds of files; run it off the startup path
 	// so the window appears immediately, then tell the frontend to refresh.
@@ -359,6 +402,11 @@ func (a *App) effectiveDirs() []string {
 }
 
 func (a *App) startWatcher() {
+	// Serialize close-old/create-new: two concurrent calls (e.g. SaveConfig
+	// racing ScanLogs) would otherwise each create a watcher and leak one.
+	a.watcherMu.Lock()
+	defer a.watcherMu.Unlock()
+
 	a.mu.Lock()
 	if a.watcher != nil {
 		_ = a.watcher.Close()
@@ -382,6 +430,26 @@ func (a *App) startWatcher() {
 }
 
 func (a *App) onFileChange(path string, ev logstore.WatchEvent) {
+	a.debounceMu.Lock()
+	if t, ok := a.debounce[path]; ok {
+		t.Stop()
+		delete(a.debounce, path)
+	}
+	if ev == logstore.WatchEventModified {
+		a.debounce[path] = time.AfterFunc(fileChangeDebounce, func() {
+			a.debounceMu.Lock()
+			delete(a.debounce, path)
+			a.debounceMu.Unlock()
+			a.handleFileChange(path, ev)
+		})
+		a.debounceMu.Unlock()
+		return
+	}
+	a.debounceMu.Unlock()
+	a.handleFileChange(path, ev)
+}
+
+func (a *App) handleFileChange(path string, ev logstore.WatchEvent) {
 	_ = a.store.Refresh(path)
 	if a.ctx == nil {
 		return

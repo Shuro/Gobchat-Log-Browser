@@ -36,6 +36,13 @@ func NewTagStore(savePath string) (*TagStore, error) {
 	return ts, nil
 }
 
+// NewEmptyTagStore returns a store with no entries that persists to savePath on
+// the next SetTags. It is the last-resort fallback when the sidecar exists but
+// cannot be parsed, so the app never has to run without a tag store.
+func NewEmptyTagStore(savePath string) *TagStore {
+	return &TagStore{data: map[string]FileTags{}, savePath: savePath}
+}
+
 func (ts *TagStore) load() error {
 	data, err := os.ReadFile(ts.savePath)
 	if err != nil {

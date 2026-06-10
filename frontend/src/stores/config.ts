@@ -1,11 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import {
-  GetConfig,
-  SaveConfig,
-  PickDirectory,
-  GetLocaleMessages,
-} from '../../wailsjs/go/api/App'
+import { GetConfig, SaveConfig, GetLocaleMessages } from '../../wailsjs/go/api/App'
 import type { config } from '../../wailsjs/go/models'
 import { useLogsStore } from './logs'
 import { applyTheme } from '../composables/theme'
@@ -54,18 +49,5 @@ export const useConfigStore = defineStore('config', () => {
     }
   }
 
-  async function addDirectory() {
-    const dir = await PickDirectory()
-    if (dir && cfg.value && !cfg.value.log_directories.includes(dir)) {
-      cfg.value.log_directories.push(dir)
-    }
-  }
-
-  function removeDirectory(dir: string) {
-    if (cfg.value) {
-      cfg.value.log_directories = cfg.value.log_directories.filter((d) => d !== dir)
-    }
-  }
-
-  return { cfg, loading, saving, load, save, addDirectory, removeDirectory }
+  return { cfg, loading, saving, load, save }
 })

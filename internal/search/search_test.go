@@ -1,6 +1,7 @@
 package search
 
 import (
+	"sync"
 	"testing"
 
 	"gobchat-log-browser/internal/parser"
@@ -61,5 +62,30 @@ func TestIndexFileRestrictionAndRemove(t *testing.T) {
 	}
 	if all := idx.Query("artifact", "", 0); len(all) != 1 {
 		t.Fatalf("after remove, artifact = %d, want 1", len(all))
+	}
+}
+
+// Concurrent AddEntries for the same file must not leave duplicate postings.
+// A duplicated posting would make a single term count twice, falsely satisfying
+// a two-term AND query — so the unsatisfiable query below must stay empty.
+func TestIndexConcurrentAddEntriesKeepsANDSemantics(t *testing.T) {
+	idx := NewIndex()
+	es := []parser.LogEntry{{LineNumber: 1, Message: "alpha only here"}}
+
+	var wg sync.WaitGroup
+	for i := 0; i < 16; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			idx.AddEntries("a.log", es)
+		}()
+	}
+	wg.Wait()
+
+	if r := idx.Query("alpha missingword", "", 0); len(r) != 0 {
+		t.Fatalf("unsatisfiable AND returned %+v — duplicate postings after concurrent AddEntries", r)
+	}
+	if r := idx.Query("alpha", "", 0); len(r) != 1 {
+		t.Fatalf("alpha = %d, want exactly 1", len(r))
 	}
 }

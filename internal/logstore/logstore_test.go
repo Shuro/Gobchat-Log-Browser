@@ -2,6 +2,7 @@ package logstore
 
 import (
 	"path/filepath"
+	"sync"
 	"testing"
 
 	"gobchat-log-browser/internal/search"
@@ -72,6 +73,39 @@ func TestStoreGetEntriesIndexes(t *testing.T) {
 	}
 	if res := idx.Query("evening", path, 0); len(res) != 1 {
 		t.Fatalf("query 'evening' = %d, want 1", len(res))
+	}
+}
+
+// Concurrent first access to the same uncached file (UI call racing a watcher
+// Refresh) must parse and index it exactly once; double-indexing would leave
+// duplicate postings that break the index's AND query semantics.
+func TestStoreConcurrentGetEntriesIndexesOnce(t *testing.T) {
+	idx := search.NewIndex()
+	s := New(idx)
+	if err := s.ScanAll([]string{"testdata"}); err != nil {
+		t.Fatalf("ScanAll: %v", err)
+	}
+	path := filepath.Join("testdata", "chatlog_2026-01-02_20-01.log")
+
+	var wg sync.WaitGroup
+	for i := 0; i < 16; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if _, err := s.GetEntries(path); err != nil {
+				t.Errorf("GetEntries: %v", err)
+			}
+		}()
+	}
+	wg.Wait()
+
+	// "evening" occurs on exactly one line; an AND query with a word that occurs
+	// nowhere must stay empty (a duplicated posting would falsely satisfy it).
+	if res := idx.Query("evening", path, 0); len(res) != 1 {
+		t.Fatalf("query 'evening' = %d, want 1", len(res))
+	}
+	if res := idx.Query("evening zzzmissing", path, 0); len(res) != 0 {
+		t.Fatalf("unsatisfiable AND returned %d results — file was double-indexed", len(res))
 	}
 }
 

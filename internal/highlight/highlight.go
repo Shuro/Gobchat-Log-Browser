@@ -117,7 +117,9 @@ func scanDelimited(message string, markers MarkerSet) []Span {
 		matched := false
 		for _, tm := range ms {
 			op := tm.pair.Open
-			if op == "" || !strings.HasPrefix(message[i:], op) {
+			// An empty close would match at offset 0 and create degenerate
+			// spans, so half-configured pairs are skipped entirely.
+			if op == "" || tm.pair.Close == "" || !strings.HasPrefix(message[i:], op) {
 				continue
 			}
 			rel := strings.Index(message[i+len(op):], tm.pair.Close)

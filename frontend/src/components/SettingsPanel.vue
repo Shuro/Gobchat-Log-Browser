@@ -1,24 +1,33 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useConfigStore } from '../stores/config'
+import { PickDirectory } from '../../wailsjs/go/api/App'
+import { config } from '../../wailsjs/go/models'
 
 const { t } = useI18n()
 const emit = defineEmits<{ (e: 'close'): void }>()
-const config = useConfigStore()
+const configStore = useConfigStore()
 
-onMounted(() => {
-  if (!config.cfg) config.load()
+// All edits go into a deep copy; the store is only updated on Save, so closing
+// the panel any other way discards the changes.
+const draft = ref<config.Config | null>(null)
+
+onMounted(async () => {
+  if (!configStore.cfg) await configStore.load()
+  if (configStore.cfg) {
+    draft.value = config.Config.createFrom(JSON.parse(JSON.stringify(configStore.cfg)))
+  }
 })
 
 const markerCategories: Array<'speech' | 'emote' | 'ooc'> = ['speech', 'emote', 'ooc']
 
 // Mention names edited as one-per-line text.
 const mentionsText = computed<string>({
-  get: () => config.cfg?.mention_names.join('\n') ?? '',
+  get: () => draft.value?.mention_names.join('\n') ?? '',
   set: (v: string) => {
-    if (config.cfg) {
-      config.cfg.mention_names = v
+    if (draft.value) {
+      draft.value.mention_names = v
         .split('\n')
         .map((s) => s.trim())
         .filter(Boolean)
@@ -27,14 +36,36 @@ const mentionsText = computed<string>({
 })
 
 function addPair(key: 'speech' | 'emote' | 'ooc') {
-  config.cfg?.markers[key].push({ open: '', close: '' } as any)
+  draft.value?.markers[key].push({ open: '', close: '' } as any)
 }
 function removePair(key: 'speech' | 'emote' | 'ooc', i: number) {
-  config.cfg?.markers[key].splice(i, 1)
+  draft.value?.markers[key].splice(i, 1)
+}
+
+async function addDirectory() {
+  const dir = await PickDirectory()
+  if (dir && draft.value && !draft.value.log_directories.includes(dir)) {
+    draft.value.log_directories.push(dir)
+  }
+}
+
+function removeDirectory(dir: string) {
+  if (draft.value) {
+    draft.value.log_directories = draft.value.log_directories.filter((d) => d !== dir)
+  }
 }
 
 async function save() {
-  await config.save()
+  if (!draft.value) return
+  // A pair missing either delimiter can't delimit anything; drop it instead of
+  // letting an empty close match at position 0 in the highlighter.
+  for (const cat of markerCategories) {
+    draft.value.markers[cat] = draft.value.markers[cat].filter(
+      (p) => p.open !== '' && p.close !== '',
+    )
+  }
+  configStore.cfg = draft.value
+  await configStore.save()
   emit('close')
 }
 </script>
@@ -47,40 +78,40 @@ async function save() {
         <button class="ghost" @click="emit('close')">✕</button>
       </header>
 
-      <div v-if="!config.cfg" class="placeholder">{{ t('viewer.loading') }}</div>
+      <div v-if="!draft" class="placeholder">{{ t('viewer.loading') }}</div>
 
       <div v-else class="settings-body">
         <!-- Directories -->
         <section>
           <h3>{{ t('settings.logDirs') }}</h3>
           <label class="check">
-            <input type="checkbox" v-model="config.cfg.auto_detect_appdata" />
+            <input type="checkbox" v-model="draft.auto_detect_appdata" />
             {{ t('settings.autoDetect') }}
           </label>
           <ul class="dir-list">
-            <li v-for="d in config.cfg.log_directories" :key="d">
+            <li v-for="d in draft.log_directories" :key="d">
               <span class="dir-path">{{ d }}</span>
-              <button class="ghost" @click="config.removeDirectory(d)">{{ t('settings.remove') }}</button>
+              <button class="ghost" @click="removeDirectory(d)">{{ t('settings.remove') }}</button>
             </li>
-            <li v-if="config.cfg.log_directories.length === 0" class="muted">
+            <li v-if="draft.log_directories.length === 0" class="muted">
               {{ t('settings.noDirs') }}
             </li>
           </ul>
-          <button @click="config.addDirectory()">{{ t('settings.addDir') }}</button>
+          <button @click="addDirectory()">{{ t('settings.addDir') }}</button>
         </section>
 
         <!-- Appearance & language -->
         <section class="grid-2">
           <div>
             <h3>{{ t('settings.theme') }}</h3>
-            <select v-model="config.cfg.theme">
+            <select v-model="draft.theme">
               <option value="dark">{{ t('settings.dark') }}</option>
               <option value="light">{{ t('settings.light') }}</option>
             </select>
           </div>
           <div>
             <h3>{{ t('settings.language') }}</h3>
-            <select v-model="config.cfg.language">
+            <select v-model="draft.language">
               <option value="en">English</option>
               <option value="de">Deutsch</option>
             </select>
@@ -108,7 +139,7 @@ async function save() {
               <button class="ghost" @click="addPair(cat)">{{ t('settings.add') }}</button>
             </div>
             <div
-              v-for="(pair, i) in config.cfg.markers[cat]"
+              v-for="(pair, i) in draft.markers[cat]"
               :key="i"
               class="marker-row"
             >
@@ -122,8 +153,8 @@ async function save() {
 
       <footer class="settings-footer">
         <button class="ghost" @click="emit('close')">{{ t('settings.cancel') }}</button>
-        <button :disabled="config.saving || !config.cfg" @click="save">
-          {{ config.saving ? t('settings.saving') : t('settings.save') }}
+        <button :disabled="configStore.saving || !draft" @click="save">
+          {{ configStore.saving ? t('settings.saving') : t('settings.save') }}
         </button>
       </footer>
     </div>

@@ -2,6 +2,9 @@
   "error.scanFailed": "Could not scan the log directory.",
   "error.parseFailed": "Could not read the log file.",
   "error.configSaveFailed": "Could not save settings.",
+  "warn.startupTitle": "Some settings could not be loaded",
+  "warn.configLoadFailed": "The settings file could not be read; defaults are in use.",
+  "warn.tagsLoadFailed": "The tags file could not be read. It was kept as %s and a new empty tags file will be used.",
   "notify.newLog": "A new log was detected: %s",
   "notify.logUpdated": "The open log was updated."
 }

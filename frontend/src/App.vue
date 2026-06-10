@@ -30,10 +30,8 @@ onMounted(async () => {
   // usable log directory.
   setupState.value = await GetSetupState()
 
-  // The backend scans on startup; pull whatever is ready now…
-  store.refreshList()
-  store.loadAllTagNames()
-  // …and refresh again when the (async) initial scan finishes.
+  // Subscribe before the first fetch so a fast initial scan that finishes in
+  // between cannot slip through unnoticed…
   unsubscribers.push(EventsOn('logs:scanned', () => store.refreshList()))
   unsubscribers.push(EventsOn('log:new', () => store.refreshList()))
   unsubscribers.push(EventsOn('log:removed', () => store.refreshList()))
@@ -42,6 +40,9 @@ onMounted(async () => {
       if (path === store.selectedPath) store.openLog(path, null, true)
     }),
   )
+  // …then pull whatever the backend's startup scan has ready now.
+  store.refreshList()
+  store.loadAllTagNames()
 })
 
 onUnmounted(() => {

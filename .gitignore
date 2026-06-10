@@ -22,6 +22,9 @@ coverage.*
 *.log
 !**/testdata/**
 
+# Local convenience scripts
+build.bat
+
 # OS / editor cruft
 .DS_Store
 Thumbs.db

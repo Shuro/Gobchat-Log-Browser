@@ -59,10 +59,13 @@ func (idx *Index) HasFile(path string) bool {
 
 // AddEntries indexes all entries of a file. It is idempotent per file: a file is
 // removed and re-added if indexed again, so re-indexing a changed file is safe.
+// Remove and add happen under one lock so concurrent AddEntries calls for the
+// same file cannot interleave and leave duplicate postings (which would break
+// the AND semantics of Query).
 func (idx *Index) AddEntries(filePath string, entries []parser.LogEntry) {
-	idx.RemoveFile(filePath)
 	idx.mu.Lock()
 	defer idx.mu.Unlock()
+	idx.removeFileLocked(filePath)
 	for _, e := range entries {
 		seen := map[string]struct{}{}
 		for _, tok := range tokenize(e.Message) {
@@ -80,6 +83,11 @@ func (idx *Index) AddEntries(filePath string, entries []parser.LogEntry) {
 func (idx *Index) RemoveFile(filePath string) {
 	idx.mu.Lock()
 	defer idx.mu.Unlock()
+	idx.removeFileLocked(filePath)
+}
+
+// removeFileLocked drops all postings for a file. Caller must hold idx.mu.
+func (idx *Index) removeFileLocked(filePath string) {
 	if _, ok := idx.files[filePath]; !ok {
 		return
 	}

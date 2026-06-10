@@ -124,3 +124,16 @@ func equalTypes(a, b []SpanType) bool {
 	}
 	return true
 }
+
+// A pair with an empty close delimiter (a half-filled settings row) must be
+// ignored: strings.Index(s, "") is 0, so honouring it would emit a degenerate
+// span at every occurrence of the open delimiter.
+func TestTokenizeIgnoresPairWithEmptyClose(t *testing.T) {
+	m := MarkerSet{Speech: []MarkerPair{{Open: `*`, Close: ``}}}
+	msg := "a *b* c"
+	spans := Tokenize(msg, m, nil)
+	assertReconstructs(t, msg, spans)
+	if len(spans) != 1 || spans[0].Type != SpanTypePlain {
+		t.Fatalf("spans = %v, want one plain span", types(spans))
+	}
+}

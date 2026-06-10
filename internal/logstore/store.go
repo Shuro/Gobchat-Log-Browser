@@ -20,6 +20,10 @@ type LogStore struct {
 	cache     map[string]*parser.ParsedLog // lazily filled on first GetEntries
 	watchDirs []string                     // directories (incl. subfolders) to watch
 	index     *search.Index
+
+	// parseMu serializes parse+index of uncached files so two concurrent
+	// GetEntries calls for the same path cannot both parse and double-index it.
+	parseMu sync.Mutex
 }
 
 // New creates a LogStore that indexes parsed entries into idx (idx may be nil to
@@ -107,6 +111,16 @@ func (s *LogStore) Get(path string) (LogMeta, bool) {
 func (s *LogStore) GetEntries(path string) ([]parser.LogEntry, error) {
 	s.mu.RLock()
 	cached, ok := s.cache[path]
+	s.mu.RUnlock()
+	if ok {
+		return cached.Entries, nil
+	}
+
+	s.parseMu.Lock()
+	defer s.parseMu.Unlock()
+	// Re-check: another caller may have parsed the file while we waited.
+	s.mu.RLock()
+	cached, ok = s.cache[path]
 	s.mu.RUnlock()
 	if ok {
 		return cached.Entries, nil
