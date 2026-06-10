@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import {
   GetLogList,
   ScanLogs,
@@ -36,8 +36,23 @@ export const useLogsStore = defineStore('logs', () => {
   // line number; it is cleared once consumed / after a moment.
   const targetLine = ref<number | null>(null)
 
-  // Per-log filter text (matches message/combined or sender, case-insensitive).
+  // Per-log find text (matches message/combined or sender, case-insensitive).
+  // 'highlight' keeps all lines visible and marks matches; 'filter' hides
+  // non-matching lines (the legacy behavior). The mode is session-sticky.
+  // Both toggle states persist across restarts (WebView2 keeps localStorage
+  // in the app's user data dir).
   const filterText = ref('')
+  const filterMode = ref<'highlight' | 'filter'>(
+    localStorage.getItem('find.filterMode') === 'filter' ? 'filter' : 'highlight',
+  )
+  // When true, only the message text is searched, not the sender name.
+  const messageOnly = ref(localStorage.getItem('find.messageOnly') === '1')
+  watch([filterMode, messageOnly], ([mode, msgOnly]) => {
+    localStorage.setItem('find.filterMode', mode)
+    localStorage.setItem('find.messageOnly', msgOnly ? '1' : '0')
+  })
+  // 0-based position within matchIndexes for Enter/Shift+Enter navigation.
+  const currentMatch = ref(0)
 
   // Tags/note for the selected log, plus all known tag names for autocomplete.
   const currentTags = ref<tags.FileTags>({ file_name: '', tags: [], note: '' })
@@ -79,23 +94,62 @@ export const useLogsStore = defineStore('logs', () => {
     selectedPlayers.value = []
   }
 
+  function entryMatches(e: api.EntryDTO, q: string): boolean {
+    return (
+      e.message.toLowerCase().includes(q) ||
+      (!messageOnly.value && (e.display_name || e.sender).toLowerCase().includes(q))
+    )
+  }
+
+  function threadMatches(t: api.ThreadDTO, q: string): boolean {
+    return (
+      t.combined.toLowerCase().includes(q) ||
+      (!messageOnly.value && t.sender.toLowerCase().includes(q))
+    )
+  }
+
   const visibleEntries = computed(() => {
     const q = filterText.value.trim().toLowerCase()
-    if (!q) return entries.value
-    return entries.value.filter(
-      (e) =>
-        e.message.toLowerCase().includes(q) ||
-        e.display_name.toLowerCase().includes(q),
-    )
+    if (!q || filterMode.value === 'highlight') return entries.value
+    return entries.value.filter((e) => entryMatches(e, q))
   })
 
   const visibleThreads = computed(() => {
     const q = filterText.value.trim().toLowerCase()
-    if (!q) return threads.value
-    return threads.value.filter(
-      (t) =>
-        t.combined.toLowerCase().includes(q) || t.sender.toLowerCase().includes(q),
-    )
+    if (!q || filterMode.value === 'highlight') return threads.value
+    return threads.value.filter((t) => threadMatches(t, q))
+  })
+
+  // Indexes of matching rows within the currently visible list, used for the
+  // match counter, next/prev navigation, and the scrollbar marker track.
+  const matchIndexes = computed<number[]>(() => {
+    const q = filterText.value.trim().toLowerCase()
+    if (!q) return []
+    const out: number[] = []
+    if (viewMode.value === 'raw') {
+      visibleEntries.value.forEach((e, i) => {
+        if (entryMatches(e, q)) out.push(i)
+      })
+    } else {
+      visibleThreads.value.forEach((t, i) => {
+        if (threadMatches(t, q)) out.push(i)
+      })
+    }
+    return out
+  })
+
+  function nextMatch() {
+    const n = matchIndexes.value.length
+    if (n > 0) currentMatch.value = (currentMatch.value + 1) % n
+  }
+
+  function prevMatch() {
+    const n = matchIndexes.value.length
+    if (n > 0) currentMatch.value = (currentMatch.value - 1 + n) % n
+  }
+
+  watch([filterText, viewMode, filterMode, messageOnly], () => {
+    currentMatch.value = 0
   })
 
   async function refreshList() {
@@ -212,6 +266,12 @@ export const useLogsStore = defineStore('logs', () => {
     visibleThreads,
     loadingThreads,
     filterText,
+    filterMode,
+    messageOnly,
+    currentMatch,
+    matchIndexes,
+    nextMatch,
+    prevMatch,
     targetLine,
     currentTags,
     allTagNames,

@@ -16,6 +16,8 @@
   --color-ooc: #8c9bb5;        /* out-of-character: muted */
   --color-mention-bg: #3a5a40; /* mentions: highlighted */
   --color-mention-fg: #c8f0c0;
+  --find-match-bg: #9c6f00;    /* find-in-log match highlight */
+  --find-match-fg: #fff3d6;
 
   /* Channel accents. */
   --channel-say: #d7deea;
@@ -42,6 +44,8 @@
   --color-ooc: #6b7787;
   --color-mention-bg: #cdeccd;
   --color-mention-fg: #1d4d1d;
+  --find-match-bg: #ffe28a;
+  --find-match-fg: #4a3c00;
 }
 
 @font-face {
@@ -517,9 +521,84 @@ button.ghost {
   color: #06121f;
   font-weight: 700;
 }
+.find-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+/* Toggle buttons: greyed out when off, full color + accent border when on
+   (emoji glyphs ignore `color`, hence grayscale). */
+.find-group .icon-btn.toggle {
+  opacity: 0.45;
+  filter: grayscale(1);
+}
+.find-group .icon-btn.toggle.active {
+  opacity: 1;
+  filter: none;
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--bg-elevated);
+}
+.match-count {
+  color: var(--text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.find-match {
+  background: var(--find-match-bg);
+  color: var(--find-match-fg);
+  border-radius: 2px;
+}
+
+.scroller-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* Match positions in the file, drawn next to the scrollbar (display only). */
+.match-track {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+.match-tick {
+  position: absolute;
+  right: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--find-match-bg);
+  opacity: 0.85;
+}
+
 .scroller {
   flex: 1 1 auto;
   overflow-y: auto;
+}
+/* Chromium/WebView2 scrollbar without arrow buttons, so the thumb's travel
+   range spans the full track and shares the match-track's coordinate space. */
+.scroller::-webkit-scrollbar {
+  width: 14px;
+}
+.scroller::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
+}
+.scroller::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+.scroller::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 7px;
+  border: 3px solid var(--bg);
+}
+.scroller::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
 
 /* --- Tag editor --- */

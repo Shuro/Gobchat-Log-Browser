@@ -1,8 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { api } from '../../wailsjs/go/models'
+import { splitMatches } from '../utils/findMatches'
 
-const props = defineProps<{ entry: api.EntryDTO; highlight?: boolean }>()
+const props = defineProps<{
+  entry: api.EntryDTO
+  highlight?: boolean
+  query?: string
+  messageOnly?: boolean
+}>()
 
 const time = computed(() => {
   if (!props.entry.timestamp) return ''
@@ -14,6 +20,16 @@ const time = computed(() => {
 
 const channelClass = computed(() => `channel-${(props.entry.channel || 'unknown').toLowerCase()}`)
 const isUnknown = computed(() => props.entry.channel === 'Unknown')
+
+const spanSegments = computed(() =>
+  props.entry.spans.map((s) => splitMatches(s.text, props.query ?? '')),
+)
+const nameSegments = computed(() =>
+  splitMatches(
+    props.entry.display_name || props.entry.sender,
+    props.messageOnly ? '' : props.query ?? '',
+  ),
+)
 </script>
 
 <template>
@@ -22,7 +38,12 @@ const isUnknown = computed(() => props.entry.channel === 'Unknown')
     <span class="channel-tag">{{ entry.channel }}</span>
     <span v-if="!isUnknown" class="sender" :title="entry.sender">
       <span v-if="entry.status_symbol" class="symbol">{{ entry.status_symbol }}</span>
-      <span class="name">{{ entry.display_name || entry.sender }}</span>
+      <span class="name"
+        ><template v-for="(seg, j) in nameSegments" :key="j"
+          ><span v-if="seg.match" class="find-match">{{ seg.text }}</span
+          ><template v-else>{{ seg.text }}</template></template
+        ></span
+      >
       <span v-if="entry.realm" class="realm">{{ entry.realm }}</span>
     </span>
     <span class="message">
@@ -30,7 +51,10 @@ const isUnknown = computed(() => props.entry.channel === 'Unknown')
         v-for="(span, i) in entry.spans"
         :key="i"
         :class="`span-${span.type}`"
-        >{{ span.text }}</span
+        ><template v-for="(seg, j) in spanSegments[i]" :key="j"
+          ><span v-if="seg.match" class="find-match">{{ seg.text }}</span
+          ><template v-else>{{ seg.text }}</template></template
+        ></span
       >
     </span>
     <span v-if="entry.part_total > 0" class="part">{{ entry.part_index }}/{{ entry.part_total }}</span>
