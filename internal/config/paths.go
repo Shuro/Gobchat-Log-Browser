@@ -49,6 +49,16 @@ func TagsFilePath() (string, error) {
 	return filepath.Join(dir, "tags.json"), nil
 }
 
+// IndexFilePath is the absolute path to index.json (the persistent log
+// metadata cache, see docs/adr/0009).
+func IndexFilePath() (string, error) {
+	dir, err := AppDataDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, "index.json"), nil
+}
+
 // GobchatDefaultLogDir returns Gobchat's default log output directory for the
 // current platform. It is detected at runtime and not stored in config.
 func GobchatDefaultLogDir() (string, error) {

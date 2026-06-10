@@ -47,6 +47,38 @@ export const useLogsStore = defineStore('logs', () => {
     summaries.value.find((s) => s.file_path === selectedPath.value) ?? null,
   )
 
+  // Player filter over the overview list: logs must contain ALL selected
+  // players (AND), so picking two names finds the scenes between them.
+  const selectedPlayers = ref<string[]>([])
+
+  const allPlayers = computed(() => {
+    const set = new Set<string>()
+    for (const s of summaries.value) for (const p of s.participants ?? []) set.add(p)
+    return [...set].sort()
+  })
+
+  const visibleSummaries = computed(() => {
+    if (selectedPlayers.value.length === 0) return summaries.value
+    return summaries.value.filter((s) =>
+      selectedPlayers.value.every((p) => s.participants?.includes(p)),
+    )
+  })
+
+  function addPlayer(name: string) {
+    const p = name.trim()
+    if (p && !selectedPlayers.value.includes(p) && allPlayers.value.includes(p)) {
+      selectedPlayers.value.push(p)
+    }
+  }
+
+  function removePlayer(name: string) {
+    selectedPlayers.value = selectedPlayers.value.filter((p) => p !== name)
+  }
+
+  function clearPlayers() {
+    selectedPlayers.value = []
+  }
+
   const visibleEntries = computed(() => {
     const q = filterText.value.trim().toLowerCase()
     if (!q) return entries.value
@@ -163,6 +195,12 @@ export const useLogsStore = defineStore('logs', () => {
   return {
     summaries,
     loadingList,
+    selectedPlayers,
+    allPlayers,
+    visibleSummaries,
+    addPlayer,
+    removePlayer,
+    clearPlayers,
     selectedPath,
     selectedSummary,
     entries,

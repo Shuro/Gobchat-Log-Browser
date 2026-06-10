@@ -7,7 +7,10 @@
     "logs": "Logs",
     "rescan": "Neu scannen",
     "scanning": "Scanne…",
-    "noLogs": "Keine Logs gefunden. Füge in den Einstellungen ein Verzeichnis hinzu oder prüfe den Gobchat-Log-Ordner."
+    "noLogs": "Keine Logs gefunden. Füge in den Einstellungen ein Verzeichnis hinzu oder prüfe den Gobchat-Log-Ordner.",
+    "filterPlayers": "Nach Spieler filtern…",
+    "clearFilter": "Leeren",
+    "noFilterMatches": "Keine Logs entsprechen dem Spieler-Filter."
   },
   "viewer": {
     "messages": "{count} Nachrichten",

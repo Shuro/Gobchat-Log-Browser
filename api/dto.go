@@ -10,7 +10,6 @@ import "gobchat-log-browser/internal/highlight"
 type LogSummary struct {
 	FilePath     string   `json:"file_path"`
 	FileName     string   `json:"file_name"`
-	Folder       string   `json:"folder"`
 	LogDate      string   `json:"log_date"`
 	MessageCount int      `json:"message_count"`
 	Participants []string `json:"participants"`

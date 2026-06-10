@@ -9,7 +9,7 @@ import (
 )
 
 func TestScanDirectoryRecursive(t *testing.T) {
-	metas, watchDirs, err := ScanDirectory("testdata")
+	metas, watchDirs, err := ScanDirectory("testdata", nil)
 	if err != nil {
 		t.Fatalf("ScanDirectory: %v", err)
 	}
@@ -45,7 +45,7 @@ func TestScanDirectoryRecursive(t *testing.T) {
 
 func TestStoreGetEntriesIndexes(t *testing.T) {
 	idx := search.NewIndex()
-	s := New(idx)
+	s := New(idx, nil)
 	if err := s.ScanAll([]string{"testdata"}); err != nil {
 		t.Fatalf("ScanAll: %v", err)
 	}
@@ -81,7 +81,7 @@ func TestStoreGetEntriesIndexes(t *testing.T) {
 // duplicate postings that break the index's AND query semantics.
 func TestStoreConcurrentGetEntriesIndexesOnce(t *testing.T) {
 	idx := search.NewIndex()
-	s := New(idx)
+	s := New(idx, nil)
 	if err := s.ScanAll([]string{"testdata"}); err != nil {
 		t.Fatalf("ScanAll: %v", err)
 	}

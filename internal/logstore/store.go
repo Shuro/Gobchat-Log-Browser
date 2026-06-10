@@ -5,6 +5,7 @@
 package logstore
 
 import (
+	"os"
 	"sort"
 	"sync"
 
@@ -20,6 +21,7 @@ type LogStore struct {
 	cache     map[string]*parser.ParsedLog // lazily filled on first GetEntries
 	watchDirs []string                     // directories (incl. subfolders) to watch
 	index     *search.Index
+	metaCache *MetaCache // persistent metadata cache; nil disables it
 
 	// parseMu serializes parse+index of uncached files so two concurrent
 	// GetEntries calls for the same path cannot both parse and double-index it.
@@ -27,12 +29,14 @@ type LogStore struct {
 }
 
 // New creates a LogStore that indexes parsed entries into idx (idx may be nil to
-// disable indexing).
-func New(idx *search.Index) *LogStore {
+// disable indexing) and reuses cached metadata from metaCache (nil disables the
+// persistent cache).
+func New(idx *search.Index, metaCache *MetaCache) *LogStore {
 	return &LogStore{
-		metas: map[string]*LogMeta{},
-		cache: map[string]*parser.ParsedLog{},
-		index: idx,
+		metas:     map[string]*LogMeta{},
+		cache:     map[string]*parser.ParsedLog{},
+		index:     idx,
+		metaCache: metaCache,
 	}
 }
 
@@ -44,7 +48,7 @@ func (s *LogStore) ScanAll(dirs []string) error {
 	watch := []string{}
 	seenWatch := map[string]struct{}{}
 	for _, dir := range dirs {
-		metas, wdirs, err := ScanDirectory(dir)
+		metas, wdirs, err := ScanDirectory(dir, s.metaCache)
 		if err != nil {
 			return err
 		}
@@ -71,6 +75,16 @@ func (s *LogStore) ScanAll(dirs []string) error {
 		}
 	}
 	s.mu.Unlock()
+
+	if s.metaCache != nil {
+		keep := map[string]struct{}{}
+		for path := range fresh {
+			keep[path] = struct{}{}
+		}
+		s.metaCache.Prune(keep)
+		// Persistence is an optimization; a failed save must not fail the scan.
+		_ = s.metaCache.Save()
+	}
 	return nil
 }
 
@@ -143,6 +157,9 @@ func (s *LogStore) GetEntries(path string) ([]parser.LogEntry, error) {
 // and re-indexes if the file was previously parsed. Used when the watcher
 // reports a change. A file that no longer exists is removed.
 func (s *LogStore) Refresh(path string) error {
+	// Stat before parsing so a file growing mid-parse records a stale mtime and
+	// gets re-parsed on the next scan rather than served stale from the cache.
+	info, statErr := os.Stat(path)
 	meta, err := ExtractMeta(path)
 	if err != nil {
 		// File likely removed/unreadable — drop it.
@@ -153,7 +170,15 @@ func (s *LogStore) Refresh(path string) error {
 		if s.index != nil {
 			s.index.RemoveFile(path)
 		}
+		if s.metaCache != nil {
+			s.metaCache.Remove(path)
+			_ = s.metaCache.Save()
+		}
 		return err
+	}
+	if s.metaCache != nil && statErr == nil {
+		s.metaCache.Put(meta, info.ModTime())
+		_ = s.metaCache.Save()
 	}
 
 	s.mu.Lock()

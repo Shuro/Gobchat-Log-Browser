@@ -51,7 +51,9 @@ var skipDirs = map[string]struct{}{
 // may be flat or split across subfolders: Gobchat's log path is configurable per
 // profile, so users often point different profiles at different subfolders.
 // Electron cache and hidden directories are skipped. A missing root is not an error.
-func ScanDirectory(root string) (metas []*LogMeta, watchDirs []string, err error) {
+// When cache is non-nil, files whose mtime+size match a cached entry reuse the
+// cached metadata instead of being parsed; nil disables caching.
+func ScanDirectory(root string, cache *MetaCache) (metas []*LogMeta, watchDirs []string, err error) {
 	if fi, statErr := os.Stat(root); statErr != nil || !fi.IsDir() {
 		return nil, nil, nil
 	}
@@ -81,15 +83,29 @@ func ScanDirectory(root string) (metas []*LogMeta, watchDirs []string, err error
 		if !IsLogFile(d.Name()) {
 			return nil
 		}
-		meta, e := ExtractMeta(path)
-		if e != nil {
-			return nil // unreadable file: skip rather than fail the scan
-		}
 		rel, _ := filepath.Rel(root, filepath.Dir(path))
 		if rel == "." {
 			rel = ""
 		}
-		meta.Folder = filepath.ToSlash(rel)
+		folder := filepath.ToSlash(rel)
+		// Stat before parsing: if the file grows mid-parse, the recorded mtime
+		// is stale and the next scan re-parses — conservative but correct.
+		info, infoErr := d.Info()
+		if infoErr == nil && cache != nil {
+			if m, ok := cache.Get(path, info.ModTime(), info.Size()); ok {
+				m.Folder = folder // root may differ from when cached; recompute
+				metas = append(metas, m)
+				return nil
+			}
+		}
+		meta, e := ExtractMeta(path)
+		if e != nil {
+			return nil // unreadable file: skip rather than fail the scan
+		}
+		meta.Folder = folder
+		if infoErr == nil && cache != nil {
+			cache.Put(meta, info.ModTime())
+		}
 		metas = append(metas, meta)
 		return nil
 	})

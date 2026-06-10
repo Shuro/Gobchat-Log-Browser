@@ -7,7 +7,10 @@
     "logs": "Logs",
     "rescan": "Rescan",
     "scanning": "Scanning…",
-    "noLogs": "No logs found. Add a directory in Settings or check the Gobchat log folder."
+    "noLogs": "No logs found. Add a directory in Settings or check the Gobchat log folder.",
+    "filterPlayers": "Filter by player…",
+    "clearFilter": "Clear",
+    "noFilterMatches": "No logs match the player filter."
   },
   "viewer": {
     "messages": "{count} messages",

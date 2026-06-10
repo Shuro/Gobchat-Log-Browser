@@ -57,7 +57,7 @@ Say [2026-05-16 20:09:30+02:00] ★M'iqo Tester [Shiva]: "Hello..." (1/2)
 Vue 3 + Pinia + vue-i18n + vue-virtual-scroller, all built and committed:
 
 - **Two-pane shell** ([App.vue](frontend/src/App.vue)) with header search and a settings button.
-- **LogList** — overview with date, participants, message count, duration, per-profile folder badge, tags.
+- **LogList** — overview with date, participants, message count, duration, tags; player filter (multi-select, AND) above the list ([PlayerFilter.vue](frontend/src/components/PlayerFilter.vue)).
 - **LogViewer / EntryRow / ThreadRow** — virtual-scrolled; Gobchat-style RP highlight spans; **Raw/Reassembled** toggle (`GetLogThreads`); per-log live filter.
 - **SearchBar / SearchResults** — global (index) or current-log search; grouped results; click jumps to the line and highlights it.
 - **TagEditor** — tags (chips + datalist autocomplete) and note per log.

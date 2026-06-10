@@ -57,7 +57,6 @@ export namespace api {
 	export class LogSummary {
 	    file_path: string;
 	    file_name: string;
-	    folder: string;
 	    log_date: string;
 	    message_count: number;
 	    participants: string[];
@@ -74,7 +73,6 @@ export namespace api {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.file_path = source["file_path"];
 	        this.file_name = source["file_name"];
-	        this.folder = source["folder"];
 	        this.log_date = source["log_date"];
 	        this.message_count = source["message_count"];
 	        this.participants = source["participants"];

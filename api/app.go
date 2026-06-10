@@ -32,10 +32,10 @@ type App struct {
 	cfg        config.Config
 	configPath string
 
-	index   *search.Index
-	store   *logstore.LogStore
-	tags    *tags.TagStore
-	loc     *i18n.Localizer
+	index *search.Index
+	store *logstore.LogStore
+	tags  *tags.TagStore
+	loc   *i18n.Localizer
 
 	// watcherMu serializes startWatcher's close-old/create-new swap; a.mu still
 	// guards the watcher field itself (Shutdown only closes, so it needs a.mu only).
@@ -91,7 +91,10 @@ func (a *App) Startup(ctx context.Context) {
 	a.tags = tagStore
 	a.loc = loc
 	a.index = search.NewIndex()
-	a.store = logstore.New(a.index)
+	// The metadata cache is derived data: if index.json is missing or corrupt,
+	// LoadMetaCache returns an empty cache and the scan simply parses everything.
+	idxPath, _ := config.IndexFilePath()
+	a.store = logstore.New(a.index, logstore.LoadMetaCache(idxPath))
 	a.mu.Unlock()
 
 	var warnings []string
@@ -492,7 +495,6 @@ func (a *App) summary(m logstore.LogMeta) LogSummary {
 	return LogSummary{
 		FilePath:     m.FilePath,
 		FileName:     m.FileName,
-		Folder:       m.Folder,
 		LogDate:      isoTime(m.LogDate),
 		MessageCount: m.MessageCount,
 		Participants: m.Participants,
