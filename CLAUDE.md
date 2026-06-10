@@ -1,55 +1,72 @@
-# CLAUDE.md — 12-rule template
+# CLAUDE.md
 
-These rules apply to every task in this project unless explicitly overridden.
-Bias: caution over speed on non-trivial work.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Rule 1 — Think Before Coding
-State assumptions explicitly. Ask rather than guess.
-Push back when a simpler approach exists. Stop when confused.
+## Project
 
-## Rule 2 — Simplicity First
-Minimum code that solves the problem. Nothing speculative.
-No abstractions for single-use code.
+Cross-platform desktop app for browsing Final Fantasy XIV roleplay chat logs produced by
+[Gobchat](https://github.com/MarbleBag/Gobchat). Go + Wails v2 backend, Vue 3 + TypeScript +
+Pinia frontend, shipped as a single static binary. Primary target is Windows; code stays
+platform-agnostic. UI and code comments in English; UI is localized en/de.
 
-## Rule 3 — Surgical Changes
-Touch only what you must. Don't improve adjacent code.
-Match existing style. Don't refactor what isn't broken.
+## Commands
 
-## Rule 4 — Goal-Driven Execution
-Define success criteria. Loop until verified.
-Strong success criteria let Claude loop independently.
+PATH does not persist between tool calls and Go/Wails/npm are not on PATH in fresh shells.
+Use the **PowerShell** tool (not Bash) for toolchain commands, prefixed with:
 
-## Rule 5 — Use the model only for judgment calls
-Use for: classification, drafting, summarization, extraction.
-Do NOT use for: routing, retries, deterministic transforms.
-If code can answer, code answers.
+```powershell
+$env:Path = [Environment]::GetEnvironmentVariable("Path","Machine")+";"+[Environment]::GetEnvironmentVariable("Path","User")+";C:\Users\Shuro\go\bin"
+```
 
-## Rule 6 — Token budgets are not advisory
-Per-task: 4,000 tokens. Per-session: 30,000 tokens.
-If approaching budget, summarize and start fresh.
-Surface the breach. Do not silently overrun.
+- Dev with hot reload: `wails dev`
+- Production build: `wails build` → `build/bin/gobchat-log-browser.exe`
+- Backend tests: `go test ./...` — single test: `go test ./internal/parser -run TestName`
+- Lint/vet: `go vet ./...`, `gofmt -l .`
+- Frontend type-check + build: `cd frontend && npm run build` (runs `vue-tsc --noEmit && vite build`)
 
-## Rule 7 — Surface conflicts, don't average them
-If two patterns contradict, pick one (more recent / more tested).
-Explain why. Flag the other for cleanup.
+## Hard constraints
 
-## Rule 8 — Read before you write
-Before adding code, read exports, immediate callers, shared utilities.
-If unsure why existing code is structured a certain way, ask.
+- **Log files are strictly read-only.** Never write, rename, move, or modify them. Reassembly
+  and reordering are in-memory display only (ADR-0007).
+- **All `{message}` content is player-authored.** Split markers (`(1/2)`, trailing ` >`,
+  leading `> `), OOC `((…))`, and speech/emote quotes are player RP conventions — treat them
+  as best-effort heuristics, never guaranteed structure. RP delimiters stay configurable (ADR-0006).
+- Lines that fail to parse must still surface as `ChannelUnknown` with raw text — never drop lines.
+- **Architectural decisions must be recorded as ADRs** in `docs/adr/` (Nygard template,
+  `docs/adr/0000-template.md`), committed *with* the code change, not after.
 
-## Rule 9 — Tests verify intent, not just behavior
-Tests must encode WHY behavior matters, not just WHAT it does.
-A test that can't fail when business logic changes is wrong.
+## Log format
 
-## Rule 10 — Checkpoint after every significant step
-Summarize what was done, what's verified, what's left.
-Don't continue from a state you can't describe back.
+```
+Chatlogger Id: CCLv1
+Chatlogger format:{channel} [{date} {time-full}] {sender}: {message}
+Say [2026-05-16 20:09:30+02:00] ★Max Mustermiqote [Shiva]: "Hello..." (1/2)
+```
 
-## Rule 11 — Match the codebase's conventions, even if you disagree
-Conformance > taste inside the codebase.
-If you think a convention is harmful, surface it. Don't fork silently.
+Line 1 is `Chatlogger Id: FCLv1|CCLv1`; CCLv1 adds a format line. Sender may carry a leading
+status symbol (`★`, `♥`, …) and a `[Realm]` suffix. Filenames: `chatlog_YYYY-MM-DD_HH-mm.log`,
+default dir `%APPDATA%\Gobchat\log`. App data (tags, notes, config, metadata cache) lives
+separately in `%APPDATA%\GobchatLogBrowser`.
 
-## Rule 12 — Fail loud
-"Completed" is wrong if anything was skipped silently.
-"Tests pass" is wrong if any were skipped.
-Default to surfacing uncertainty, not hiding it.
+## Architecture
+
+The Go backend does everything heavy; the frontend is a thin virtualized UI connected through
+Wails bindings.
+
+- `internal/parser` — CCLv1/FCLv1 format→regex, sender split (symbol/name/realm), heuristic
+  part/continuation detection; synthetic fixtures in `testdata/`
+- `internal/highlight` — configurable RP tokenizer → flat `[]Span` (speech/emote/ooc/mention)
+- `internal/reassemble` — in-memory interrupted-thread reassembly
+- `internal/search` — lazy in-memory inverted index, AND queries
+- `internal/logstore` — registry, recursive scanner, fsnotify watcher, persistent JSON
+  metadata cache for fast startup (ADR-0009)
+- `internal/tags` — filename-keyed JSON sidecars (tags + notes)
+- `internal/config` — config + atomic load/save + platform paths
+- `internal/i18n` — embedded backend localizer (en/de)
+- `api/` — the Wails binding layer (`App` + DTOs in `dto.go`); the only surface the frontend
+  calls. Emits `logs:scanned` and `log:new|updated|removed` events.
+- `frontend/src` — Vue 3 + Pinia + vue-i18n + vue-virtual-scroller; backend locale strings
+  are merged at runtime via `GetLocaleMessages`.
+
+Design rationale lives in `docs/adr/` (0001–0010) — read the relevant ADR before changing
+parsing, reassembly, search, or storage behavior.
