@@ -2,12 +2,14 @@
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useConfigStore } from '../stores/config'
+import { useLogsStore } from '../stores/logs'
 import { PickDirectory } from '../../wailsjs/go/api/App'
 import { config } from '../../wailsjs/go/models'
 
 const { t } = useI18n()
 const emit = defineEmits<{ (e: 'close'): void }>()
 const configStore = useConfigStore()
+const logsStore = useLogsStore()
 
 // All edits go into a deep copy; the store is only updated on Save, so closing
 // the panel any other way discards the changes.
@@ -34,6 +36,40 @@ const mentionsText = computed<string>({
     }
   },
 })
+
+// Roleplay characters are picked from the indexed player list via a small
+// autocomplete (same filtering as PlayerFilter, minus keyboard list nav).
+const rpInput = ref('')
+const rpOpen = ref(false)
+const rpInputEl = ref<HTMLInputElement | null>(null)
+const rpSuggestions = computed(() => {
+  const d = draft.value
+  if (!d) return []
+  const q = rpInput.value.trim().toLowerCase()
+  const pool = logsStore.allPlayers.filter((p) => !d.roleplay_characters.includes(p))
+  return q ? pool.filter((p) => p.toLowerCase().includes(q)) : pool
+})
+
+function addCharacter(name: string) {
+  draft.value?.roleplay_characters.push(name)
+  rpInput.value = ''
+  rpOpen.value = false
+  // Same as PlayerFilter: the input keeps focus after a suggestion click, and
+  // re-clicking a focused input would never reopen the dropdown.
+  rpInputEl.value?.blur()
+}
+
+function addCharacterFromInput() {
+  const list = rpSuggestions.value
+  const pick = list.find((p) => p.toLowerCase() === rpInput.value.trim().toLowerCase()) ?? list[0]
+  if (pick) addCharacter(pick)
+}
+
+function removeCharacter(name: string) {
+  if (draft.value) {
+    draft.value.roleplay_characters = draft.value.roleplay_characters.filter((n) => n !== name)
+  }
+}
 
 function addPair(key: 'speech' | 'emote' | 'ooc') {
   draft.value?.markers[key].push({ open: '', close: '' } as any)
@@ -115,6 +151,43 @@ async function save() {
               <option value="en">English</option>
               <option value="de">Deutsch</option>
             </select>
+          </div>
+        </section>
+
+        <!-- Roleplay characters -->
+        <section>
+          <h3>{{ t('settings.rpCharacters') }}</h3>
+          <p class="muted">{{ t('settings.rpCharactersHint') }}</p>
+          <ul class="dir-list">
+            <li v-for="name in draft.roleplay_characters" :key="name">
+              <span class="dir-path">
+                {{ name }}
+                <span
+                  v-if="logsStore.allPlayers.length > 0 && !logsStore.allPlayers.includes(name)"
+                  class="muted"
+                  >⚠ {{ t('settings.rpCharacterNotFound') }}</span
+                >
+              </span>
+              <button class="ghost" @click="removeCharacter(name)">{{ t('settings.remove') }}</button>
+            </li>
+          </ul>
+          <div class="suggest-wrap">
+            <input
+              ref="rpInputEl"
+              v-model="rpInput"
+              class="player-input"
+              :placeholder="t('settings.rpCharactersPlaceholder')"
+              @focus="rpOpen = true"
+              @input="rpOpen = true"
+              @keydown.enter.prevent="addCharacterFromInput()"
+              @keydown.esc="rpOpen = false"
+              @blur="rpOpen = false"
+            />
+            <ul v-if="rpOpen && rpSuggestions.length" class="suggest-list">
+              <li v-for="p in rpSuggestions" :key="p" @mousedown.prevent="addCharacter(p)">
+                {{ p }}
+              </li>
+            </ul>
           </div>
         </section>
 

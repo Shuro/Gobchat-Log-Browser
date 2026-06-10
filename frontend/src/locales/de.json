@@ -56,6 +56,10 @@
     "dark": "Dunkel",
     "light": "Hell",
     "language": "Sprache",
+    "rpCharacters": "Meine Rollenspiel-Charaktere",
+    "rpCharactersHint": "Werden im Spielerfilter oben angepinnt.",
+    "rpCharacterNotFound": "in keinem Log gefunden",
+    "rpCharactersPlaceholder": "Tippen, um Namen zu suchen…",
     "mentions": "Meine Namen hervorheben (Mentions)",
     "mentionsPlaceholder": "Ein Name pro Zeile…",
     "markers": "Rollenspiel-Marker",
@@ -80,6 +84,9 @@
     "notFound": " (nicht gefunden)",
     "chooseFolder": "Ordner wählen…",
     "hint": "Wähle den Ordner, in dem deine Gobchat-Chatlogs gespeichert sind.",
+    "rpCharacter": "Mein Rollenspiel-Charakter (optional)",
+    "rpCharacterHint": "Wird im Spielerfilter oben angepinnt. Weitere später in den Einstellungen.",
+    "rpCharacterPlaceholder": "z. B. Max Mustermiqote",
     "getStarted": "Los geht's",
     "saving": "Speichere…"
   }

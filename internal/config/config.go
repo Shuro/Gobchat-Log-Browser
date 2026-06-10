@@ -13,26 +13,28 @@ import (
 
 // Config is the user-facing application configuration.
 type Config struct {
-	LogDirectories    []string            `json:"log_directories"`
-	AutoDetectAppData bool                `json:"auto_detect_appdata"`
-	Language          string              `json:"language"` // "en" | "de"
-	MentionNames      []string            `json:"mention_names"`
-	Markers           highlight.MarkerSet `json:"markers"` // configurable RP delimiters
-	Theme             string              `json:"theme"`   // "light" | "dark"
-	ChannelFilters    map[string]bool     `json:"channel_filters"`
+	LogDirectories     []string            `json:"log_directories"`
+	AutoDetectAppData  bool                `json:"auto_detect_appdata"`
+	Language           string              `json:"language"` // "en" | "de"
+	MentionNames       []string            `json:"mention_names"`
+	RoleplayCharacters []string            `json:"roleplay_characters"` // pinned in the player filter
+	Markers            highlight.MarkerSet `json:"markers"`             // configurable RP delimiters
+	Theme              string              `json:"theme"`               // "light" | "dark"
+	ChannelFilters     map[string]bool     `json:"channel_filters"`
 }
 
 // DefaultConfig returns the baseline configuration, seeding the RP marker set
 // with the Gobchat defaults.
 func DefaultConfig() Config {
 	return Config{
-		LogDirectories:    []string{},
-		AutoDetectAppData: true,
-		Language:          "en",
-		MentionNames:      []string{},
-		Markers:           highlight.DefaultMarkerSet(),
-		Theme:             "dark",
-		ChannelFilters:    map[string]bool{},
+		LogDirectories:     []string{},
+		AutoDetectAppData:  true,
+		Language:           "en",
+		MentionNames:       []string{},
+		RoleplayCharacters: []string{},
+		Markers:            highlight.DefaultMarkerSet(),
+		Theme:              "dark",
+		ChannelFilters:     map[string]bool{},
 	}
 }
 

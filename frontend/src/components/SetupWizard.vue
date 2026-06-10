@@ -16,6 +16,8 @@ const language = ref('en')
 const theme = ref('dark')
 const useDetected = ref(props.state.default_log_dir_exists)
 const chosenDir = ref('')
+// Free text: nothing is scanned yet, so there is no name list to pick from.
+const characterName = ref('')
 
 onMounted(async () => {
   if (!config.cfg) await config.load()
@@ -47,6 +49,10 @@ async function finish() {
   config.cfg.auto_detect_appdata = useDetected.value
   if (chosenDir.value && !config.cfg.log_directories.includes(chosenDir.value)) {
     config.cfg.log_directories.push(chosenDir.value)
+  }
+  const name = characterName.value.trim()
+  if (name && !config.cfg.roleplay_characters.includes(name)) {
+    config.cfg.roleplay_characters.push(name)
   }
   await config.save()
   emit('done')
@@ -91,6 +97,16 @@ async function finish() {
           <span v-if="chosenDir" class="dir-path">{{ chosenDir }}</span>
         </div>
         <p v-if="!hasLogDir" class="muted hint">{{ t('setup.hint') }}</p>
+      </section>
+
+      <section>
+        <h3>{{ t('setup.rpCharacter') }}</h3>
+        <p class="muted">{{ t('setup.rpCharacterHint') }}</p>
+        <input
+          v-model="characterName"
+          class="player-input"
+          :placeholder="t('setup.rpCharacterPlaceholder')"
+        />
       </section>
 
       <footer class="wizard-footer">

@@ -176,6 +176,7 @@ export namespace config {
 	    auto_detect_appdata: boolean;
 	    language: string;
 	    mention_names: string[];
+	    roleplay_characters: string[];
 	    markers: highlight.MarkerSet;
 	    theme: string;
 	    channel_filters: Record<string, boolean>;
@@ -190,6 +191,7 @@ export namespace config {
 	        this.auto_detect_appdata = source["auto_detect_appdata"];
 	        this.language = source["language"];
 	        this.mention_names = source["mention_names"];
+	        this.roleplay_characters = source["roleplay_characters"];
 	        this.markers = this.convertValues(source["markers"], highlight.MarkerSet);
 	        this.theme = source["theme"];
 	        this.channel_filters = source["channel_filters"];
