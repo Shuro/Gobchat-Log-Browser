@@ -24,6 +24,7 @@ coverage.*
 
 # Local convenience scripts
 build.bat
+build+run.bat
 
 # OS / editor cruft
 .DS_Store
