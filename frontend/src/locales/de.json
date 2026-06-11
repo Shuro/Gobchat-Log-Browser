@@ -72,7 +72,8 @@
     "close": "zu",
     "cancel": "Abbrechen",
     "save": "Speichern",
-    "saving": "Speichere…"
+    "saving": "Speichere…",
+    "version": "Version {version}"
   },
   "setup": {
     "welcome": "Willkommen beim Gobchat Log Browser",

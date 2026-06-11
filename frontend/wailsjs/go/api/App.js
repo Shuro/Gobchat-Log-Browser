@@ -34,6 +34,10 @@ export function GetTags(arg1) {
   return window['go']['api']['App']['GetTags'](arg1);
 }
 
+export function GetVersion() {
+  return window['go']['api']['App']['GetVersion']();
+}
+
 export function PickDirectory() {
   return window['go']['api']['App']['PickDirectory']();
 }

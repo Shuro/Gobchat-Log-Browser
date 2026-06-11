@@ -9,5 +9,11 @@
   "author": {
     "name": "Shuro",
     "email": "944030+Shuro@users.noreply.github.com"
+  },
+  "info": {
+    "companyName": "Shuro",
+    "productName": "Gobchat Log Browser",
+    "productVersion": "0.0.0",
+    "copyright": "Copyright © 2026 Shuro"
   }
 }

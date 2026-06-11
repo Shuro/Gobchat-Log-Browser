@@ -223,6 +223,9 @@ button.ghost {
   gap: 8px;
   justify-content: flex-end;
 }
+.settings-footer .version {
+  margin-right: auto;
+}
 .settings-body {
   flex: 1 1 auto;
   overflow-y: auto;

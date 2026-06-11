@@ -20,6 +20,8 @@ export function GetSetupState():Promise<api.SetupState>;
 
 export function GetTags(arg1:string):Promise<tags.FileTags>;
 
+export function GetVersion():Promise<string>;
+
 export function PickDirectory():Promise<string>;
 
 export function SaveConfig(arg1:config.Config):Promise<void>;

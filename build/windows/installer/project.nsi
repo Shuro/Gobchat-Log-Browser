@@ -30,6 +30,9 @@ Unicode true
 ####
 ## !define REQUEST_EXECUTION_LEVEL "admin"            # Default "admin"  see also https://nsis.sourceforge.io/Docs/Chapter4.html
 ####
+## Per-user install: no admin/UAC required (see docs/adr/0011).
+!define REQUEST_EXECUTION_LEVEL "user"
+####
 ## Include the wails tools
 ####
 !include "wails_tools.nsh"
@@ -72,7 +75,7 @@ ManifestDPIAware true
 
 Name "${INFO_PRODUCTNAME}"
 OutFile "..\..\bin\${INFO_PROJECTNAME}-${ARCH}-installer.exe" # Name of the installer's file.
-InstallDir "$PROGRAMFILES64\${INFO_COMPANYNAME}\${INFO_PRODUCTNAME}" # Default installing folder ($PROGRAMFILES is Program Files folder).
+InstallDir "$LOCALAPPDATA\GobchatLogBrowser" # Per-user install, no admin rights needed.
 ShowInstDetails show # This will always show the installation details.
 
 Function .onInit
@@ -100,7 +103,9 @@ SectionEnd
 Section "uninstall"
     !insertmacro wails.setShellContext
 
-    RMDir /r "$AppData\${PRODUCT_EXECUTABLE}" # Remove the WebView2 DataPath
+    # Remove only the WebView2 cache; user data (config.json, tags.json,
+    # index.json in %APPDATA%\GobchatLogBrowser) survives uninstall.
+    RMDir /r "$APPDATA\GobchatLogBrowser\webview2"
 
     RMDir /r $INSTDIR
 

@@ -20,6 +20,7 @@ import (
 	"gobchat-log-browser/internal/reassemble"
 	"gobchat-log-browser/internal/search"
 	"gobchat-log-browser/internal/tags"
+	"gobchat-log-browser/internal/version"
 
 	wruntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -56,6 +57,11 @@ const fileChangeDebounce = 300 * time.Millisecond
 // provides the context.
 func NewApp() *App {
 	return &App{debounce: map[string]*time.Timer{}}
+}
+
+// GetVersion returns the app version ("dev" for local builds).
+func (a *App) GetVersion() string {
+	return version.Version
 }
 
 // Startup is wired to Wails OnStartup. It loads config and tags, builds the

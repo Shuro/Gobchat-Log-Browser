@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useConfigStore } from '../stores/config'
 import { useLogsStore } from '../stores/logs'
-import { PickDirectory } from '../../wailsjs/go/api/App'
+import { GetVersion, PickDirectory } from '../../wailsjs/go/api/App'
 import { config } from '../../wailsjs/go/models'
 
 const { t } = useI18n()
@@ -15,7 +15,10 @@ const logsStore = useLogsStore()
 // the panel any other way discards the changes.
 const draft = ref<config.Config | null>(null)
 
+const appVersion = ref('')
+
 onMounted(async () => {
+  appVersion.value = await GetVersion()
   if (!configStore.cfg) await configStore.load()
   if (configStore.cfg) {
     draft.value = config.Config.createFrom(JSON.parse(JSON.stringify(configStore.cfg)))
@@ -225,6 +228,7 @@ async function save() {
       </div>
 
       <footer class="settings-footer">
+        <span class="muted version">{{ t('settings.version', { version: appVersion }) }}</span>
         <button class="ghost" @click="emit('close')">{{ t('settings.cancel') }}</button>
         <button :disabled="configStore.saving || !draft" @click="save">
           {{ configStore.saving ? t('settings.saving') : t('settings.save') }}
