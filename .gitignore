@@ -1,5 +1,9 @@
 # Wails / frontend build output
 build/bin
+
+# Go build temp dir (GOTMPDIR) — kept inside the project because the
+# antivirus exclusion covers the project folder but not %TEMP%
+.gotmp/
 node_modules
 frontend/dist/*
 !frontend/dist/gitkeep
