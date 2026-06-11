@@ -22,9 +22,11 @@ frontend/dist/*
 coverage.*
 
 # Chat logs are personal/sensitive — never commit real logs.
-# Synthetic test fixtures under testdata/ are committed explicitly (exception below).
+# Synthetic test fixtures under testdata/ and the AI-generated example logs
+# under docs/examples/mock-logs/ are committed explicitly (exceptions below).
 *.log
 !**/testdata/**
+!docs/examples/mock-logs/*.log
 
 # Local convenience scripts
 build.bat
