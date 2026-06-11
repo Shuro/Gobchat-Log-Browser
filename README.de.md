@@ -58,7 +58,14 @@ Der **Gobchat Log Browser** ist eine Desktop-App, die aus diesen Log-Dateien ein
 
 > **Plattform-Unterstützung:** Windows ist die unterstützte und getestete Plattform. Der Code ist plattformunabhängig, Linux-/macOS-Builds sollten funktionieren, sind aber derzeit ungetestet.
 
-Es gibt noch keine fertigen Releases — baue die App also aus dem Quellcode (siehe unten). Ein einzelnes `wails build` erzeugt eine eigenständige `gobchat-log-browser.exe`.
+Lade die aktuelle Version von der [Releases-Seite](https://github.com/Shuro/Gobchat-Log-Browser/releases/latest) herunter:
+
+- **Installer (empfohlen):** `gobchat-log-browser-vX.Y.Z-windows-amd64-installer.exe` — installiert pro Benutzer nach `%LOCALAPPDATA%\GobchatLogBrowser` (keine Admin-Rechte nötig) und legt Startmenü- und Desktop-Verknüpfungen an. Beim Deinstallieren über Windows-Einstellungen → Apps bleiben Tags, Notizen und Einstellungen erhalten.
+- **Portabel:** `gobchat-log-browser-vX.Y.Z-windows-amd64-portable.zip` — irgendwo entpacken und die Exe direkt starten.
+
+> **SmartScreen-Warnung:** Die Binärdateien sind nicht code-signiert, daher zeigt Windows beim ersten Start eventuell *„Der Computer wurde durch Windows geschützt"* an. Klicke auf **Weitere Informationen → Trotzdem ausführen**. Das ist bei kleinen Open-Source-Tools ohne (kostenpflichtiges) Signaturzertifikat normal.
+
+Aus dem Quellcode bauen (siehe unten) funktioniert ebenfalls, ist aber optional.
 
 1. Starte die Anwendung. Beim ersten Start fragt ein kurzer Einrichtungsassistent nach Sprache, Design und Log-Ordner.
 2. Ist Gobchat installiert, wird dessen Log-Ordner automatisch erkannt — einfach bestätigen.

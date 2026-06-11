@@ -58,9 +58,16 @@
 
 > **Platform support:** Windows is the supported and tested platform. The code base is platform-agnostic and Linux/macOS builds should work, but they are currently untested.
 
-There are no prebuilt releases yet, so build from source (see below) — it's a single `wails build` producing one self-contained `gobchat-log-browser.exe`.
+Download the latest version from the [releases page](https://github.com/Shuro/Gobchat-Log-Browser/releases/latest):
 
-1. Run the executable. On first launch a short setup wizard asks for your language, theme, and log folder.
+- **Installer (recommended):** `gobchat-log-browser-vX.Y.Z-windows-amd64-installer.exe` — installs per-user to `%LOCALAPPDATA%\GobchatLogBrowser` (no admin rights needed) and creates Start Menu and desktop shortcuts. Uninstalling via Windows Settings → Apps keeps your tags, notes, and settings.
+- **Portable:** `gobchat-log-browser-vX.Y.Z-windows-amd64-portable.zip` — unzip anywhere and run the exe directly.
+
+> **SmartScreen warning:** the binaries are not code-signed, so Windows may show *"Windows protected your PC"* on first run. Click **More info → Run anyway**. This is expected for small open-source tools without a (paid) signing certificate.
+
+Building from source (see below) works too, but is optional.
+
+1. Run the application. On first launch a short setup wizard asks for your language, theme, and log folder.
 2. If Gobchat is installed, its log folder is detected automatically — just confirm it.
 3. Pick a log from the list and start reading. That's it.
 

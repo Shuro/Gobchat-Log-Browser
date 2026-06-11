@@ -30,7 +30,7 @@ marker, so there are no version-bump commits and no second source to drift.
 A GitHub Actions workflow (`.github/workflows/release.yml`) triggers on tag push, builds
 on `windows-latest` with `wails build -nsis`, and publishes a GitHub Release containing a
 zipped portable exe and an NSIS installer. Asset names follow the fixed convention
-`gobchat-log-browser-v<ver>-windows-amd64.zip` /
+`gobchat-log-browser-v<ver>-windows-amd64-portable.zip` /
 `gobchat-log-browser-v<ver>-windows-amd64-installer.exe`, which the future update check
 will resolve without extra metadata.
 
