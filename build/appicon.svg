@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Mockup lineart for the app icon: FFXIV-style goblin studying a parchment.
+       Hand-off sketch for a real artist; rendered to appicon.png.
+       Flat color fills + black lineart. Goblin is zoomed to fill the card;
+       anything crossing the card edge (ear tips) is clipped. -->
+  <defs>
+    <clipPath id="cardClip">
+      <rect x="32" y="32" width="960" height="960" rx="160"/>
+    </clipPath>
+  </defs>
+
+  <!-- card fill (canvas outside the card stays transparent) -->
+  <rect x="32" y="32" width="960" height="960" rx="160" fill="#ffffff"/>
+
+  <g clip-path="url(#cardClip)">
+    <g transform="translate(-92.2 -101) scale(1.18)">
+      <g stroke="#111111" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none">
+        <!-- cloth bundle on the back, peeking out behind the shoulders -->
+        <ellipse cx="512" cy="545" rx="290" ry="175" fill="#ece2c8" stroke-width="12"/>
+
+        <!-- body / shoulders (leather vest) -->
+        <path d="M 432 528 C 330 562 262 652 256 792 C 252 852 253 884 258 908 L 766 908 C 771 884 772 852 768 792 C 762 652 694 562 592 528 Z" fill="#8a5a36"/>
+        <!-- arms -->
+        <path d="M 354 586 C 320 646 318 698 334 728"/>
+        <path d="M 670 586 C 704 646 706 698 690 728"/>
+
+        <!-- parchment: top roll, sheet, bottom roll -->
+        <rect x="352" y="612" width="320" height="48" rx="24" fill="#ecdcb2" stroke-width="12"/>
+        <circle cx="372" cy="636" r="9" stroke-width="7"/>
+        <circle cx="652" cy="636" r="9" stroke-width="7"/>
+        <rect x="376" y="660" width="272" height="216" fill="#f3e6c4" stroke-width="12"/>
+        <rect x="352" y="868" width="320" height="48" rx="24" fill="#ecdcb2" stroke-width="12"/>
+        <circle cx="372" cy="892" r="9" stroke-width="7"/>
+        <circle cx="652" cy="892" r="9" stroke-width="7"/>
+        <!-- text squiggles -->
+        <g stroke-width="8">
+          <path d="M 412 706 C 444 698 476 714 512 706 C 548 698 580 714 612 706"/>
+          <path d="M 412 748 C 444 740 476 756 512 748 C 548 740 580 756 612 748"/>
+          <path d="M 412 790 C 444 782 476 798 512 790 C 548 782 580 798 612 790"/>
+          <path d="M 412 832 C 440 824 468 840 500 832 C 524 826 544 836 560 832"/>
+        </g>
+
+        <!-- hands (pale cloth mitts) gripping the scroll edges -->
+        <path d="M 332 726 C 306 742 300 792 322 818 C 348 838 392 834 400 808 L 400 750 C 394 722 356 712 332 726 Z" fill="#e9dcc0" stroke-width="12"/>
+        <path d="M 336 760 L 398 756" stroke-width="8"/>
+        <path d="M 338 792 L 398 788" stroke-width="8"/>
+        <path d="M 692 726 C 718 742 724 792 702 818 C 676 838 632 834 624 808 L 624 750 C 630 722 668 712 692 726 Z" fill="#e9dcc0" stroke-width="12"/>
+        <path d="M 688 760 L 626 756" stroke-width="8"/>
+        <path d="M 686 792 L 626 788" stroke-width="8"/>
+
+        <!-- ears (green, droopy, pointed) -->
+        <path d="M 310 318 C 225 285 130 320 90 420 C 160 455 260 445 318 392 Z" fill="#a3ad66"/>
+        <path d="M 120 412 C 190 395 250 382 305 360" stroke-width="8"/>
+        <path d="M 714 318 C 799 285 894 320 934 420 C 864 455 764 445 706 392 Z" fill="#a3ad66"/>
+        <path d="M 904 412 C 834 395 774 382 719 360" stroke-width="8"/>
+
+        <!-- skull / leather mask -->
+        <ellipse cx="512" cy="320" rx="220" ry="175" fill="#c98f52"/>
+        <!-- pale crown patch -->
+        <ellipse cx="512" cy="202" rx="105" ry="42" fill="#e9dcc0" stroke-width="8"/>
+
+        <!-- black button eyes, wide apart -->
+        <circle cx="390" cy="330" r="52" fill="#111111" stroke="none"/>
+        <circle cx="375" cy="314" r="11" fill="#ffffff" stroke="none"/>
+        <circle cx="634" cy="330" r="52" fill="#111111" stroke="none"/>
+        <circle cx="619" cy="314" r="11" fill="#ffffff" stroke="none"/>
+
+        <!-- big droopy snout -->
+        <path d="M 432 398 C 402 466 406 548 456 594 C 488 622 536 622 568 594 C 618 548 622 466 592 398 C 566 356 458 356 432 398 Z" fill="#c98f52"/>
+        <!-- center stitch seam from patch down over the snout -->
+        <path d="M 512 248 L 512 586" stroke-width="7" stroke-dasharray="14 16"/>
+        <!-- breathing holes flanking the seam -->
+        <g fill="#3a2a1a" stroke="none">
+          <circle cx="465" cy="470" r="12"/>
+          <circle cx="465" cy="520" r="12"/>
+          <circle cx="465" cy="566" r="12"/>
+          <circle cx="559" cy="470" r="12"/>
+          <circle cx="559" cy="520" r="12"/>
+          <circle cx="559" cy="566" r="12"/>
+        </g>
+      </g>
+    </g>
+  </g>
+
+  <!-- card border drawn on top so the clipped goblin keeps a clean edge -->
+  <rect x="32" y="32" width="960" height="960" rx="160" fill="none" stroke="#111111" stroke-width="14"/>
+</svg>
