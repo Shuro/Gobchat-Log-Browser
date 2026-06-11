@@ -39,10 +39,15 @@ jobs:
       - name: Install Wails CLI
         run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.12.0
 
-      # makensis is preinstalled on windows-latest; install only if it vanishes
-      # from the runner image.
+      # NSIS is not on the runner image; the choco package also doesn't shim
+      # makensis onto PATH, so expose the install dir to later steps explicitly.
       - name: Ensure NSIS
-        run: if (-not (Get-Command makensis -ErrorAction SilentlyContinue)) { choco install nsis -y }
+        run: |
+          if (-not (Get-Command makensis -ErrorAction SilentlyContinue)) {
+            choco install nsis -y
+            "${env:ProgramFiles(x86)}\NSIS" | Out-File -FilePath $env:GITHUB_PATH -Append
+            "${env:ProgramFiles(x86)}\NSIS\Bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+          }
 
       - name: Build portable exe and NSIS installer
         run: wails build -platform windows/amd64 -nsis -ldflags "-X gobchat-log-browser/internal/version.Version=$env:VERSION"
