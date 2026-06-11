@@ -29,17 +29,13 @@ Der **Gobchat Log Browser** ist eine Desktop-App, die aus diesen Log-Dateien ein
 
 ## Screenshots
 
-<!-- TODO: aufnehmen, in docs/screenshots/ ablegen und die Tabelle einkommentieren:
-     - log-list.png    — Hauptfenster mit Log-Liste und Spieler-Filter
-     - log-viewer.png  — geöffnetes Log mit RP-Hervorhebung und Suche im Log
-     - search.png      — globale Suchergebnisse über alle Logs
+| Log-Liste & Filter | Log-Ansicht |
+| --- | --- |
+| ![Log-Liste](docs/screenshots/log-list.png) | ![Log-Ansicht](docs/screenshots/log-viewer.png) |
+| **Suche** | **Einstellungen** |
+| ![Suche](docs/screenshots/search.png) | ![Einstellungen](docs/screenshots/settings.png) |
 
-| Log-Liste & Filter | Log-Ansicht | Suche |
-|---|---|---|
-| ![Log-Liste](docs/screenshots/log-list.png) | ![Log-Ansicht](docs/screenshots/log-viewer.png) | ![Suche](docs/screenshots/search.png) |
--->
-
-*Screenshots folgen in Kürze.*
+*Aufgenommen mit den KI-generierten [Beispiel-Logs](docs/examples/mock-logs/) — keine echten Spielerdaten.*
 
 ## Funktionen
 

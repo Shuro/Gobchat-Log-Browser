@@ -29,17 +29,13 @@
 
 ## Screenshots
 
-<!-- TODO: capture and drop into docs/screenshots/, then uncomment the table:
-     - log-list.png    — main window with the log list and player filter
-     - log-viewer.png  — an open log with RP highlighting and find-in-log
-     - search.png      — global search results across all logs
+| Log list & filters | Log viewer |
+| --- | --- |
+| ![Log list](docs/screenshots/log-list.png) | ![Log viewer](docs/screenshots/log-viewer.png) |
+| **Search** | **Settings** |
+| ![Search](docs/screenshots/search.png) | ![Settings](docs/screenshots/settings.png) |
 
-| Log list & filters | Log viewer | Search |
-|---|---|---|
-| ![Log list](docs/screenshots/log-list.png) | ![Log viewer](docs/screenshots/log-viewer.png) | ![Search](docs/screenshots/search.png) |
--->
-
-*Screenshots coming soon.*
+*Captured with the AI-generated [mock logs](docs/examples/mock-logs/) — no real player data.*
 
 ## Features
 
