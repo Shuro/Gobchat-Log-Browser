@@ -18,12 +18,23 @@ const useDetected = ref(props.state.default_log_dir_exists)
 const chosenDir = ref('')
 // Free text: nothing is scanned yet, so there is no name list to pick from.
 const characterName = ref('')
+const checkUpdates = ref(false)
 
 onMounted(async () => {
   if (!config.cfg) await config.load()
   if (config.cfg) {
     language.value = config.cfg.language || 'en'
     theme.value = config.cfg.theme || 'dark'
+    // Re-shown wizards (version bump) must respect an existing "auto-detect
+    // off" choice instead of silently re-enabling it.
+    if (props.state.config_exists) {
+      useDetected.value = config.cfg.auto_detect_appdata && props.state.default_log_dir_exists
+    }
+    // The installer's one-shot seed wins on first run; otherwise the existing
+    // config value pre-fills (false for true first runs).
+    checkUpdates.value = props.state.installer_seed_found
+      ? props.state.installer_check_updates
+      : config.cfg.check_updates_on_start
   }
 })
 
@@ -33,8 +44,13 @@ watch(language, (val) => {
   locale.value = val === 'de' ? 'de' : 'en'
 })
 
+// Existing configured directories also count, or a re-shown wizard would lock
+// out users whose detected default is gone but who added their own folders.
 const hasLogDir = computed(
-  () => (useDetected.value && props.state.default_log_dir_exists) || chosenDir.value !== '',
+  () =>
+    (useDetected.value && props.state.default_log_dir_exists) ||
+    chosenDir.value !== '' ||
+    (config.cfg?.log_directories.length ?? 0) > 0,
 )
 
 async function pick() {
@@ -54,6 +70,10 @@ async function finish() {
   if (name && !config.cfg.roleplay_characters.includes(name)) {
     config.cfg.roleplay_characters.push(name)
   }
+  config.cfg.check_updates_on_start = checkUpdates.value
+  // Stamp the version delivered by the backend, so Go stays the single source
+  // of the current wizard version.
+  config.cfg.setup_wizard_version = props.state.wizard_version
   await config.save()
   emit('done')
 }
@@ -107,6 +127,15 @@ async function finish() {
           class="player-input"
           :placeholder="t('setup.rpCharacterPlaceholder')"
         />
+      </section>
+
+      <section>
+        <h3>{{ t('setup.updates') }}</h3>
+        <label class="check">
+          <input type="checkbox" v-model="checkUpdates" />
+          {{ t('setup.checkUpdates') }}
+        </label>
+        <p class="muted">{{ t('setup.updatesHint') }}</p>
       </section>
 
       <footer class="wizard-footer">

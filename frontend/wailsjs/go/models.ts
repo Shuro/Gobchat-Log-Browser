@@ -111,6 +111,9 @@ export namespace api {
 	    config_exists: boolean;
 	    default_log_dir: string;
 	    default_log_dir_exists: boolean;
+	    wizard_version: number;
+	    installer_seed_found: boolean;
+	    installer_check_updates: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new SetupState(source);
@@ -122,6 +125,9 @@ export namespace api {
 	        this.config_exists = source["config_exists"];
 	        this.default_log_dir = source["default_log_dir"];
 	        this.default_log_dir_exists = source["default_log_dir_exists"];
+	        this.wizard_version = source["wizard_version"];
+	        this.installer_seed_found = source["installer_seed_found"];
+	        this.installer_check_updates = source["installer_check_updates"];
 	    }
 	}
 	export class ThreadDTO {
@@ -166,6 +172,24 @@ export namespace api {
 		    return a;
 		}
 	}
+	export class UpdateCheckResult {
+	    status: string;
+	    current_version: string;
+	    latest_version: string;
+	    release_url: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new UpdateCheckResult(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.status = source["status"];
+	        this.current_version = source["current_version"];
+	        this.latest_version = source["latest_version"];
+	        this.release_url = source["release_url"];
+	    }
+	}
 
 }
 
@@ -180,6 +204,8 @@ export namespace config {
 	    markers: highlight.MarkerSet;
 	    theme: string;
 	    channel_filters: Record<string, boolean>;
+	    check_updates_on_start: boolean;
+	    setup_wizard_version: number;
 	
 	    static createFrom(source: any = {}) {
 	        return new Config(source);
@@ -195,6 +221,8 @@ export namespace config {
 	        this.markers = this.convertValues(source["markers"], highlight.MarkerSet);
 	        this.theme = source["theme"];
 	        this.channel_filters = source["channel_filters"];
+	        this.check_updates_on_start = source["check_updates_on_start"];
+	        this.setup_wizard_version = source["setup_wizard_version"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

@@ -73,7 +73,22 @@
     "cancel": "Abbrechen",
     "save": "Speichern",
     "saving": "Speichere…",
-    "version": "Version {version}"
+    "version": "Version {version}",
+    "about": "Über",
+    "github": "Projekt auf GitHub",
+    "checkUpdatesOnStart": "Beim Start nach Updates suchen",
+    "checkNow": "Nach Updates suchen",
+    "checking": "Suche…",
+    "upToDate": "Du bist auf dem neuesten Stand.",
+    "updateAvailable": "Version {version} ist verfügbar.",
+    "openRelease": "Release-Seite öffnen",
+    "updateError": "Update-Prüfung fehlgeschlagen.",
+    "devBuild": "Entwicklungs-Build — Update-Prüfung übersprungen."
+  },
+  "update": {
+    "available": "Version {version} verfügbar",
+    "open": "Release ansehen",
+    "dismiss": "Ausblenden"
   },
   "setup": {
     "welcome": "Willkommen beim Gobchat Log Browser",
@@ -88,6 +103,9 @@
     "rpCharacter": "Mein Rollenspiel-Charakter (optional)",
     "rpCharacterHint": "Wird im Spielerfilter oben angepinnt. Weitere später in den Einstellungen.",
     "rpCharacterPlaceholder": "z. B. Max Mustermiqote",
+    "updates": "Updates",
+    "updatesHint": "Zeigt einen Hinweis, wenn eine neue Version erscheint. Es wird nichts automatisch heruntergeladen.",
+    "checkUpdates": "Beim Start nach Updates suchen",
     "getStarted": "Los geht's",
     "saving": "Speichere…"
   }

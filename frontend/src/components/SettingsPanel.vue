@@ -3,8 +3,11 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useConfigStore } from '../stores/config'
 import { useLogsStore } from '../stores/logs'
-import { GetVersion, PickDirectory } from '../../wailsjs/go/api/App'
+import { CheckForUpdate, GetVersion, PickDirectory } from '../../wailsjs/go/api/App'
+import { BrowserOpenURL } from '../../wailsjs/runtime/runtime'
 import { config } from '../../wailsjs/go/models'
+
+const GITHUB_URL = 'https://github.com/Shuro/Gobchat-Log-Browser'
 
 const { t } = useI18n()
 const emit = defineEmits<{ (e: 'close'): void }>()
@@ -91,6 +94,29 @@ async function addDirectory() {
 function removeDirectory(dir: string) {
   if (draft.value) {
     draft.value.log_directories = draft.value.log_directories.filter((d) => d !== dir)
+  }
+}
+
+// Manual update check: acts immediately, independent of the draft/save flow.
+const updateState = ref<'idle' | 'checking' | 'uptodate' | 'available' | 'dev' | 'error'>('idle')
+const latestVersion = ref('')
+const releaseUrl = ref('')
+
+async function checkForUpdates() {
+  updateState.value = 'checking'
+  try {
+    const res = await CheckForUpdate()
+    if (res.status === 'update_available') {
+      latestVersion.value = res.latest_version
+      releaseUrl.value = res.release_url
+      updateState.value = 'available'
+    } else if (res.status === 'dev') {
+      updateState.value = 'dev'
+    } else {
+      updateState.value = 'uptodate'
+    }
+  } catch {
+    updateState.value = 'error'
   }
 }
 
@@ -225,10 +251,38 @@ async function save() {
             </div>
           </div>
         </section>
+
+        <!-- About -->
+        <section>
+          <h3>{{ t('settings.about') }}</h3>
+          <p class="muted">
+            {{ t('app.title') }} — {{ t('settings.version', { version: appVersion }) }}
+          </p>
+          <label class="check">
+            <input type="checkbox" v-model="draft.check_updates_on_start" />
+            {{ t('settings.checkUpdatesOnStart') }}
+          </label>
+          <div class="about-actions">
+            <button class="ghost" @click="BrowserOpenURL(GITHUB_URL)">
+              {{ t('settings.github') }}
+            </button>
+            <button :disabled="updateState === 'checking'" @click="checkForUpdates()">
+              {{ updateState === 'checking' ? t('settings.checking') : t('settings.checkNow') }}
+            </button>
+          </div>
+          <p v-if="updateState === 'uptodate'" class="muted">{{ t('settings.upToDate') }}</p>
+          <p v-else-if="updateState === 'dev'" class="muted">{{ t('settings.devBuild') }}</p>
+          <p v-else-if="updateState === 'error'" class="muted">{{ t('settings.updateError') }}</p>
+          <p v-else-if="updateState === 'available'">
+            {{ t('settings.updateAvailable', { version: latestVersion }) }}
+            <button class="ghost" @click="BrowserOpenURL(releaseUrl)">
+              {{ t('settings.openRelease') }}
+            </button>
+          </p>
+        </section>
       </div>
 
       <footer class="settings-footer">
-        <span class="muted version">{{ t('settings.version', { version: appVersion }) }}</span>
         <button class="ghost" @click="emit('close')">{{ t('settings.cancel') }}</button>
         <button :disabled="configStore.saving || !draft" @click="save">
           {{ configStore.saving ? t('settings.saving') : t('settings.save') }}

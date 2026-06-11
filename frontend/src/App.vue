@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
-import { EventsOn } from '../wailsjs/runtime/runtime'
-import { GetSetupState } from '../wailsjs/go/api/App'
+import { BrowserOpenURL, EventsOn } from '../wailsjs/runtime/runtime'
+import { CheckForUpdate, GetSetupState } from '../wailsjs/go/api/App'
 import type { api } from '../wailsjs/go/models'
 import { useLogsStore } from './stores/logs'
 import { useSearchStore } from './stores/search'
@@ -20,15 +20,30 @@ const search = useSearchStore()
 const config = useConfigStore()
 const showSettings = ref(false)
 const setupState = ref<api.SetupState | null>(null)
+const updateNotice = ref<api.UpdateCheckResult | null>(null)
 const unsubscribers: Array<() => void> = []
+
+// Startup update check: opt-in, and silent on any failure — being offline must
+// never produce an error popup. The manual check in Settings surfaces errors.
+function checkForUpdateQuietly() {
+  if (!config.cfg?.check_updates_on_start) return
+  CheckForUpdate()
+    .then((res) => {
+      if (res.status === 'update_available') updateNotice.value = res
+    })
+    .catch(() => {})
+}
 
 onMounted(async () => {
   // Load config first so the theme is applied immediately.
   await config.load()
 
-  // First-run check: show the setup wizard if there is no config yet or no
-  // usable log directory.
+  // First-run check: show the setup wizard if there is no config yet, no
+  // usable log directory, or the wizard gained new content since completion.
   setupState.value = await GetSetupState()
+
+  // Don't pop a banner behind the wizard; onSetupDone re-checks instead.
+  if (!setupState.value?.needs_setup) checkForUpdateQuietly()
 
   // Subscribe before the first fetch so a fast initial scan that finishes in
   // between cannot slip through unnoticed…
@@ -52,6 +67,7 @@ onUnmounted(() => {
 function onSetupDone() {
   if (setupState.value) setupState.value.needs_setup = false
   store.refreshList()
+  checkForUpdateQuietly()
 }
 </script>
 
@@ -62,6 +78,14 @@ function onSetupDone() {
       <SearchBar />
       <button class="icon-btn" :title="t('app.settings')" @click="showSettings = true">⚙</button>
     </header>
+    <div v-if="updateNotice" class="update-banner">
+      <span>{{ t('update.available', { version: updateNotice.latest_version }) }}</span>
+      <button class="ghost" @click="BrowserOpenURL(updateNotice.release_url)">
+        {{ t('update.open') }}
+      </button>
+      <span class="spacer"></span>
+      <button class="ghost" :title="t('update.dismiss')" @click="updateNotice = null">✕</button>
+    </div>
     <main class="app-body">
       <LogList />
       <div class="main-pane">

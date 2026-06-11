@@ -73,7 +73,22 @@
     "cancel": "Cancel",
     "save": "Save",
     "saving": "Saving…",
-    "version": "Version {version}"
+    "version": "Version {version}",
+    "about": "About",
+    "github": "Project on GitHub",
+    "checkUpdatesOnStart": "Check for updates when the app starts",
+    "checkNow": "Check for updates",
+    "checking": "Checking…",
+    "upToDate": "You're up to date.",
+    "updateAvailable": "Version {version} is available.",
+    "openRelease": "Open release page",
+    "updateError": "Update check failed.",
+    "devBuild": "Development build — update check skipped."
+  },
+  "update": {
+    "available": "Version {version} available",
+    "open": "View release",
+    "dismiss": "Dismiss"
   },
   "setup": {
     "welcome": "Welcome to Gobchat Log Browser",
@@ -88,6 +103,9 @@
     "rpCharacter": "My roleplay character (optional)",
     "rpCharacterHint": "Pinned to the top of the player filter. Add more later in Settings.",
     "rpCharacterPlaceholder": "e.g. John Gobchat",
+    "updates": "Updates",
+    "updatesHint": "Shows a notice when a new version is released. Nothing is downloaded automatically.",
+    "checkUpdates": "Check for updates when the app starts",
     "getStarted": "Get started",
     "saving": "Saving…"
   }

@@ -20,6 +20,7 @@ import (
 	"gobchat-log-browser/internal/reassemble"
 	"gobchat-log-browser/internal/search"
 	"gobchat-log-browser/internal/tags"
+	"gobchat-log-browser/internal/update"
 	"gobchat-log-browser/internal/version"
 
 	wruntime "github.com/wailsapp/wails/v2/pkg/runtime"
@@ -62,6 +63,39 @@ func NewApp() *App {
 // GetVersion returns the app version ("dev" for local builds).
 func (a *App) GetVersion() string {
 	return version.Version
+}
+
+// CheckForUpdate queries GitHub for the latest release and compares it against
+// the running version (docs/adr/0012). Dev builds skip the network call
+// entirely. Callers decide how to surface errors: the startup check swallows
+// them (offline must be silent), the manual Settings check displays them.
+func (a *App) CheckForUpdate() (UpdateCheckResult, error) {
+	res := UpdateCheckResult{CurrentVersion: version.Version}
+	if _, ok := update.ParseVersion(version.Version); !ok {
+		res.Status = "dev"
+		return res, nil
+	}
+
+	ctx := a.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	rel, err := update.NewClient().LatestRelease(ctx)
+	if err != nil {
+		return res, fmt.Errorf("%s: %w", a.t("error.updateCheckFailed"), err)
+	}
+	if _, ok := update.ParseVersion(rel.TagName); !ok {
+		return res, fmt.Errorf("%s: unexpected tag %q", a.t("error.updateCheckFailed"), rel.TagName)
+	}
+
+	res.LatestVersion = strings.TrimPrefix(strings.TrimSpace(rel.TagName), "v")
+	res.ReleaseURL = rel.HTMLURL
+	if update.IsNewer(rel.TagName, version.Version) {
+		res.Status = "update_available"
+	} else {
+		res.Status = "up_to_date"
+	}
+	return res, nil
 }
 
 // Startup is wired to Wails OnStartup. It loads config and tags, builds the
@@ -309,9 +343,11 @@ func (a *App) GetAllTagNames() []string { return a.tags.AllTags() }
 // --- First-run setup ---
 
 // GetSetupState reports whether the first-run wizard should be shown. It is
-// needed when no config file exists yet, or when there is no usable log
-// directory (the detected default does not exist and no configured directory
-// exists). It also returns the detected default directory to prefill the wizard.
+// needed when no config file exists yet, when there is no usable log directory
+// (the detected default does not exist and no configured directory exists), or
+// when the wizard gained new content since the user last completed it. It also
+// returns the detected default directory to prefill the wizard and consumes
+// the installer's one-shot update-check seed, if present.
 func (a *App) GetSetupState() SetupState {
 	a.mu.RLock()
 	cfgPath := a.configPath
@@ -338,8 +374,26 @@ func (a *App) GetSetupState() SetupState {
 			break
 		}
 	}
-	st.NeedsSetup = !st.ConfigExists || (!st.DefaultLogDirExists && !anyConfigured)
+
+	st.WizardVersion = config.SetupWizardCurrentVersion
+	if seedPath, err := config.InstallerDefaultsFilePath(); err == nil {
+		if def, found := config.ConsumeInstallerDefaults(seedPath); found {
+			st.InstallerSeedFound = true
+			st.InstallerCheckUpdates = def.CheckUpdatesOnStart
+		}
+	}
+
+	st.NeedsSetup = needsSetup(st.ConfigExists, st.DefaultLogDirExists, anyConfigured, cfg.SetupWizardVersion)
 	return st
+}
+
+// needsSetup decides whether the wizard shows: on true first run, when no
+// usable log directory exists, or when the wizard gained new content since the
+// user last completed it (savedWizardVersion behind the current version).
+func needsSetup(configExists, defaultDirExists, anyConfigured bool, savedWizardVersion int) bool {
+	return !configExists ||
+		(!defaultDirExists && !anyConfigured) ||
+		savedWizardVersion < config.SetupWizardCurrentVersion
 }
 
 // --- Dialogs ---

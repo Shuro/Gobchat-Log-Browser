@@ -2,6 +2,7 @@
   "error.scanFailed": "Das Log-Verzeichnis konnte nicht durchsucht werden.",
   "error.parseFailed": "Die Logdatei konnte nicht gelesen werden.",
   "error.configSaveFailed": "Die Einstellungen konnten nicht gespeichert werden.",
+  "error.updateCheckFailed": "Es konnte nicht nach Updates gesucht werden.",
   "warn.startupTitle": "Einige Einstellungen konnten nicht geladen werden",
   "warn.configLoadFailed": "Die Einstellungsdatei konnte nicht gelesen werden; es gelten die Standardwerte.",
   "warn.tagsLoadFailed": "Die Tags-Datei konnte nicht gelesen werden. Sie wurde als %s aufbewahrt und eine neue leere Tags-Datei wird verwendet.",

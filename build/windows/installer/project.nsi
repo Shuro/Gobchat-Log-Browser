@@ -52,6 +52,8 @@ VIAddVersionKey "ProductName"     "${INFO_PRODUCTNAME}"
 ManifestDPIAware true
 
 !include "MUI.nsh"
+# For ${BM_GETCHECK} in LaunchApplication (guarded against double inclusion).
+!include "WinMessages.nsh"
 
 !define MUI_ICON "..\icon.ico"
 !define MUI_UNICON "..\icon.ico"
@@ -64,6 +66,14 @@ ManifestDPIAware true
 !insertmacro MUI_PAGE_DIRECTORY # In which folder install page.
 !insertmacro MUI_PAGE_INSTFILES # Installing page.
 !define MUI_FINISHPAGE_RUN "$INSTDIR\${PRODUCT_EXECUTABLE}" # Offer to launch the app on the finish page (checked by default).
+!define MUI_FINISHPAGE_RUN_FUNCTION LaunchApplication
+# Second finish-page checkbox (the documented MUI2 way is to repurpose the
+# readme checkbox): opt into the app's update check. Writes a one-shot seed
+# file the first-run wizard consumes (docs/adr/0012).
+!define MUI_FINISHPAGE_SHOWREADME ""
+!define MUI_FINISHPAGE_SHOWREADME_TEXT "Check for updates when the app starts"
+!define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
+!define MUI_FINISHPAGE_SHOWREADME_FUNCTION WriteUpdateSeed
 !insertmacro MUI_PAGE_FINISH # Finished installation page.
 
 !insertmacro MUI_UNPAGE_INSTFILES # Uinstalling page
@@ -81,6 +91,26 @@ ShowInstDetails show # This will always show the installation details.
 
 Function .onInit
    !insertmacro wails.checkArchitecture
+FunctionEnd
+
+# Seed content must stay ASCII-only: FileWrite in a Unicode installer emits the
+# ANSI codepage, which matches the UTF-8 the app expects only for ASCII.
+Function WriteUpdateSeed
+    CreateDirectory "$APPDATA\GobchatLogBrowser"
+    FileOpen $0 "$APPDATA\GobchatLogBrowser\installer-defaults.json" w
+    FileWrite $0 '{"check_updates_on_start": true}'
+    FileClose $0
+FunctionEnd
+
+Function LaunchApplication
+    # MUI2 processes the Run checkbox before the ShowReadme one, so write the
+    # seed here first when its box is ticked — otherwise the launched app could
+    # read setup state before the seed exists. WriteUpdateSeed may then run a
+    # second time via the ShowReadme path; the double-write is harmless.
+    SendMessage $mui.FinishPage.ShowReadme ${BM_GETCHECK} 0 0 $0
+    IntCmp $0 0 +2
+        Call WriteUpdateSeed
+    Exec '"$INSTDIR\${PRODUCT_EXECUTABLE}"'
 FunctionEnd
 
 Section
@@ -107,6 +137,10 @@ Section "uninstall"
     # Remove only the WebView2 cache; user data (config.json, tags.json,
     # index.json in %APPDATA%\GobchatLogBrowser) survives uninstall.
     RMDir /r "$APPDATA\GobchatLogBrowser\webview2"
+
+    # The update-check seed is an installer artifact, not user data; it only
+    # still exists if the app was never launched after install.
+    Delete "$APPDATA\GobchatLogBrowser\installer-defaults.json"
 
     RMDir /r $INSTDIR
 

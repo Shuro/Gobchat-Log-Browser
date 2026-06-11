@@ -59,6 +59,16 @@ func IndexFilePath() (string, error) {
 	return filepath.Join(dir, "index.json"), nil
 }
 
+// InstallerDefaultsFilePath is the absolute path to installer-defaults.json,
+// the one-shot seed the Windows installer may leave for the first-run wizard.
+func InstallerDefaultsFilePath() (string, error) {
+	dir, err := AppDataDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, "installer-defaults.json"), nil
+}
+
 // GobchatDefaultLogDir returns Gobchat's default log output directory for the
 // current platform. It is detected at runtime and not stored in config.
 func GobchatDefaultLogDir() (string, error) {

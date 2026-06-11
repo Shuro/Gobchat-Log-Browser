@@ -13,28 +13,41 @@ import (
 
 // Config is the user-facing application configuration.
 type Config struct {
-	LogDirectories     []string            `json:"log_directories"`
-	AutoDetectAppData  bool                `json:"auto_detect_appdata"`
-	Language           string              `json:"language"` // "en" | "de"
-	MentionNames       []string            `json:"mention_names"`
-	RoleplayCharacters []string            `json:"roleplay_characters"` // pinned in the player filter
-	Markers            highlight.MarkerSet `json:"markers"`             // configurable RP delimiters
-	Theme              string              `json:"theme"`               // "light" | "dark"
-	ChannelFilters     map[string]bool     `json:"channel_filters"`
+	LogDirectories      []string            `json:"log_directories"`
+	AutoDetectAppData   bool                `json:"auto_detect_appdata"`
+	Language            string              `json:"language"` // "en" | "de"
+	MentionNames        []string            `json:"mention_names"`
+	RoleplayCharacters  []string            `json:"roleplay_characters"` // pinned in the player filter
+	Markers             highlight.MarkerSet `json:"markers"`             // configurable RP delimiters
+	Theme               string              `json:"theme"`               // "light" | "dark"
+	ChannelFilters      map[string]bool     `json:"channel_filters"`
+	CheckUpdatesOnStart bool                `json:"check_updates_on_start"` // opt-in update check (docs/adr/0012)
+	SetupWizardVersion  int                 `json:"setup_wizard_version"`   // last completed wizard version; 0 = never/pre-versioning
 }
+
+// SetupWizardCurrentVersion is bumped whenever the setup wizard gains content
+// existing users should see; a config with an older (or missing, i.e. 0) value
+// makes the wizard show once more, pre-filled. History:
+//
+//	1 = original wizard (language, theme, log dir, RP character); configs from
+//	    that era have no setup_wizard_version field and load as 0
+//	2 = update-check opt-in added
+const SetupWizardCurrentVersion = 2
 
 // DefaultConfig returns the baseline configuration, seeding the RP marker set
 // with the Gobchat defaults.
 func DefaultConfig() Config {
 	return Config{
-		LogDirectories:     []string{},
-		AutoDetectAppData:  true,
-		Language:           "en",
-		MentionNames:       []string{},
-		RoleplayCharacters: []string{},
-		Markers:            highlight.DefaultMarkerSet(),
-		Theme:              "dark",
-		ChannelFilters:     map[string]bool{},
+		LogDirectories:      []string{},
+		AutoDetectAppData:   true,
+		Language:            "en",
+		MentionNames:        []string{},
+		RoleplayCharacters:  []string{},
+		Markers:             highlight.DefaultMarkerSet(),
+		Theme:               "dark",
+		ChannelFilters:      map[string]bool{},
+		CheckUpdatesOnStart: false, // never phone home without consent
+		SetupWizardVersion:  0,
 	}
 }
 

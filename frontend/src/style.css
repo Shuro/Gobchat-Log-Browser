@@ -223,8 +223,21 @@ button.ghost {
   gap: 8px;
   justify-content: flex-end;
 }
-.settings-footer .version {
-  margin-right: auto;
+.about-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.update-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+}
+.update-banner .spacer {
+  margin-left: auto;
 }
 .settings-body {
   flex: 1 1 auto;
