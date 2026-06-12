@@ -102,41 +102,45 @@ watch(activeIdx, async () => {
 
 <template>
   <div class="player-filter">
-    <span
-      v-for="f in store.selectedFilters"
-      :key="f.type + ':' + f.value"
-      class="tag removable"
-      @click="store.removeFilter(f)"
-    >
-      {{ label(f) }} <span class="x">✕</span>
-    </span>
-    <div class="suggest-wrap">
-      <input
-        ref="inputEl"
-        v-model="input"
-        class="player-input"
-        :placeholder="t('nav.filterPlayers')"
-        @focus="open = true"
-        @input="open = true; activeIdx = -1"
-        @keydown.enter="onEnter"
-        @keydown.down.prevent="move(1)"
-        @keydown.up.prevent="move(-1)"
-        @keydown.esc="open = false"
-        @blur="open = false"
-      />
-      <ul v-if="open && suggestions.length" ref="listEl" class="suggest-list">
-        <li
-          v-for="(s, i) in suggestions"
-          :key="s.type + ':' + s.value"
-          :class="{ active: i === activeIdx, 'group-sep': isGroupStart(i) }"
-          @mousedown.prevent="add(s)"
-        >
-          {{ label(s) }}
-        </li>
-      </ul>
+    <div class="filter-row">
+      <div class="suggest-wrap">
+        <input
+          ref="inputEl"
+          v-model="input"
+          class="player-input"
+          :placeholder="t('nav.filterPlayers')"
+          @focus="open = true"
+          @input="open = true; activeIdx = -1"
+          @keydown.enter="onEnter"
+          @keydown.down.prevent="move(1)"
+          @keydown.up.prevent="move(-1)"
+          @keydown.esc="open = false"
+          @blur="open = false"
+        />
+        <ul v-if="open && suggestions.length" ref="listEl" class="suggest-list">
+          <li
+            v-for="(s, i) in suggestions"
+            :key="s.type + ':' + s.value"
+            :class="{ active: i === activeIdx, 'group-sep': isGroupStart(i) }"
+            @mousedown.prevent="add(s)"
+          >
+            {{ label(s) }}
+          </li>
+        </ul>
+      </div>
+      <button v-if="store.selectedFilters.length > 0" class="clear" @click="store.clearFilters()">
+        {{ t('nav.clearFilter') }}
+      </button>
     </div>
-    <button v-if="store.selectedFilters.length > 0" class="clear" @click="store.clearFilters()">
-      {{ t('nav.clearFilter') }}
-    </button>
+    <div v-if="store.selectedFilters.length > 0" class="filter-badges">
+      <span
+        v-for="f in store.selectedFilters"
+        :key="f.type + ':' + f.value"
+        class="tag removable"
+        @click="store.removeFilter(f)"
+      >
+        {{ label(f) }} <span class="x">✕</span>
+      </span>
+    </div>
   </div>
 </template>

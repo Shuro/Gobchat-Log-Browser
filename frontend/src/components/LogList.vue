@@ -39,13 +39,15 @@ function formatDate(iso: string): string {
       >
         <div class="row-top">
           <span class="date">{{ formatDate(log.log_date) }}</span>
-          <span class="count">{{ log.message_count }}</span>
+          <span class="row-top-right">
+            <span v-if="log.note" class="note-ind" :title="log.note">📝</span>
+            <span class="count">{{ log.message_count }}</span>
+          </span>
         </div>
         <div v-if="log.participants && log.participants.length" class="participants">
           {{ log.participants.join(', ') }}
         </div>
-        <div class="row-bottom">
-          <span v-if="log.duration" class="duration">{{ log.duration }}</span>
+        <div v-if="log.tags && log.tags.length" class="item-tags">
           <span
             v-for="tg in log.tags"
             :key="tg"
@@ -54,6 +56,9 @@ function formatDate(iso: string): string {
             @click.stop="store.addFilter({ type: 'tag', value: tg })"
             >{{ tg }}</span
           >
+        </div>
+        <div v-if="log.duration" class="row-bottom">
+          <span class="duration">{{ log.duration }}</span>
         </div>
       </li>
     </ul>

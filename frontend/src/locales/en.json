@@ -29,7 +29,8 @@
     "reassembling": "Reassembling…",
     "noThreads": "No threads match the filter.",
     "parts": "{count} parts",
-    "hideRealm": "Hide realm names"
+    "hideRealm": "Hide realm names",
+    "channels": "Channels"
   },
   "search": {
     "scopeAll": "All logs",
@@ -40,7 +41,11 @@
     "searching": "Searching…",
     "results": "{count} result(s)",
     "noMatches": "No matches.",
-    "close": "Close"
+    "close": "Close",
+    "allChannels": "All channels",
+    "senderPlaceholder": "Sender…",
+    "backToResults": "Results ({count})",
+    "truncated": "Not all matches are shown — refine your search."
   },
   "tags": {
     "addTag": "Add tag…",
@@ -102,6 +107,7 @@
   "update": {
     "available": "Version {version} available",
     "open": "View release",
+    "skip": "Skip this version",
     "dismiss": "Dismiss"
   },
   "setup": {

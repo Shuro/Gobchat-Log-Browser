@@ -10,11 +10,21 @@ const draftTags = ref<string[]>([])
 const draftNote = ref('')
 const newTag = ref('')
 const dirty = ref(false)
+// The file the current draft belongs to — needed to autosave it after the
+// user has already switched to another log.
+const draftFile = ref('')
 
 // Reset the draft whenever the selected log's tags change (e.g. after openLog).
 watch(
   () => store.currentTags,
   (ft) => {
+    // Switching logs must not silently discard typed tags/notes: commit a
+    // dirty draft for the previous file before adopting the new one. This
+    // extends the existing "blur commits pending input" behavior.
+    if (dirty.value && draftFile.value && draftFile.value !== ft.file_name) {
+      store.saveTags(draftFile.value, [...draftTags.value], draftNote.value.trim())
+    }
+    draftFile.value = ft.file_name
     draftTags.value = [...(ft.tags ?? [])]
     draftNote.value = ft.note ?? ''
     dirty.value = false
@@ -37,7 +47,7 @@ function removeTag(t: string) {
 }
 
 async function save() {
-  await store.saveTags(draftTags.value, draftNote.value.trim())
+  await store.saveTags(draftFile.value, draftTags.value, draftNote.value.trim())
   dirty.value = false
 }
 </script>

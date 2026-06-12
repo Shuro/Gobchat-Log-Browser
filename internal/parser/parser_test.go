@@ -105,8 +105,8 @@ func TestParseSenderVariants(t *testing.T) {
 		// FFXIV prefixes party senders with private-use glyphs (slot icons)
 		// that render as tofu boxes outside the game; they must be dropped
 		// from the display symbol while real symbols like ★ stay.
-		{"Nevio Ateius", "", "Nevio Ateius", ""},
-		{"★Norah Zhvan [Shiva]", "★", "Norah Zhvan", "[Shiva]"},
+		{"\uE0E1Nevio Ateius", "", "Nevio Ateius", ""},
+		{"\uE091★Norah Zhvan [Shiva]", "★", "Norah Zhvan", "[Shiva]"},
 	}
 	for _, c := range cases {
 		sym, name, realm := parseSender(c.raw)
@@ -168,6 +168,26 @@ func TestDetectHeuristicsContinuationMarkers(t *testing.T) {
 		if e.HasContinuation != c.hasCont || e.IsContinuation != c.isCont {
 			t.Fatalf("detectHeuristics(%q): has=%v is=%v, want has=%v is=%v",
 				c.message, e.HasContinuation, e.IsContinuation, c.hasCont, c.isCont)
+		}
+	}
+}
+
+// FFXIV party-slot icons are private-use-area runes that render as tofu boxes
+// outside the game, so display strings must drop them — while real player RP
+// symbols (★, ♥, …) must survive. Both the Raw view (via parseSender) and the
+// reassembled thread view (via the api layer) rely on this.
+func TestStripPrivateUse(t *testing.T) {
+	cases := []struct {
+		in, want string
+	}{
+		{"\uE0E1★", "★"}, // party slot glyph dropped, real symbol kept
+		{"\uE091", ""},   // glyph-only symbol becomes empty
+		{"♥", "♥"},       // untouched without PUA
+		{"\uE0E1Alpha Tester [Shiva]", "Alpha Tester [Shiva]"}, // full sender (thread view)
+	}
+	for _, c := range cases {
+		if got := StripPrivateUse(c.in); got != c.want {
+			t.Fatalf("StripPrivateUse(%q) = %q, want %q", c.in, got, c.want)
 		}
 	}
 }

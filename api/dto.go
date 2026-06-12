@@ -73,6 +73,13 @@ type UpdateCheckResult struct {
 	ReleaseURL     string `json:"release_url"`
 }
 
+// SearchResponse wraps the hits of one search; Truncated tells the frontend
+// that the list was cut off and more matches exist.
+type SearchResponse struct {
+	Results   []SearchResultDTO `json:"results"`
+	Truncated bool              `json:"truncated"`
+}
+
 // SearchResultDTO is one search hit, enriched with entry context.
 type SearchResultDTO struct {
 	FilePath   string `json:"file_path"`

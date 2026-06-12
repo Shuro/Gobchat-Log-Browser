@@ -25,13 +25,23 @@ const unsubscribers: Array<() => void> = []
 
 // Startup update check: opt-in, and silent on any failure — being offline must
 // never produce an error popup. The manual check in Settings surfaces errors.
+// A version skipped via the banner stays silent until a newer one appears.
 function checkForUpdateQuietly() {
   if (!config.cfg?.check_updates_on_start) return
   CheckForUpdate()
     .then((res) => {
-      if (res.status === 'update_available') updateNotice.value = res
+      if (res.status !== 'update_available') return
+      if (localStorage.getItem('update.skipVersion') === res.latest_version) return
+      updateNotice.value = res
     })
     .catch(() => {})
+}
+
+function skipUpdate() {
+  if (updateNotice.value) {
+    localStorage.setItem('update.skipVersion', updateNotice.value.latest_version)
+    updateNotice.value = null
+  }
 }
 
 onMounted(async () => {
@@ -52,7 +62,9 @@ onMounted(async () => {
   unsubscribers.push(EventsOn('log:removed', () => store.refreshList()))
   unsubscribers.push(
     EventsOn('log:updated', (path: string) => {
-      if (path === store.selectedPath) store.openLog(path, null, true)
+      // In-place refresh: keeps view mode, find text, and scroll position
+      // while Gobchat is still writing to the open log.
+      if (path === store.selectedPath) store.reloadCurrent()
     }),
   )
   // …then pull whatever the backend's startup scan has ready now.
@@ -88,6 +100,7 @@ function onSetupDone() {
       <button class="ghost" @click="BrowserOpenURL(updateNotice.release_url)">
         {{ t('update.open') }}
       </button>
+      <button class="ghost" @click="skipUpdate">{{ t('update.skip') }}</button>
       <span class="spacer"></span>
       <button class="ghost" :title="t('update.dismiss')" @click="updateNotice = null">✕</button>
     </div>
@@ -95,7 +108,7 @@ function onSetupDone() {
       <LogList />
       <div class="main-pane">
         <LogViewer />
-        <SearchResults v-if="search.ran" />
+        <SearchResults v-if="search.ran && search.visible" />
       </div>
     </main>
     <SettingsPanel v-if="showSettings" @close="showSettings = false" />

@@ -153,18 +153,18 @@ func parseSender(s string) (symbol, display, realm string) {
 		j++
 	}
 	if j > 0 {
-		symbol = stripPrivateUse(string(runes[:j]))
+		symbol = StripPrivateUse(string(runes[:j]))
 		display = strings.TrimSpace(string(runes[j:]))
 	}
 	return symbol, display, realm
 }
 
-// stripPrivateUse drops Unicode private-use-area runes (U+E000–U+F8FF) from a
-// status symbol. FFXIV prefixes party senders with PUA glyphs (party slot
-// icons such as U+E0E1/U+E091…) that only the game font can render — outside
-// the game they show as tofu boxes. Real symbols (★, ♥, …) are kept; the raw
-// sender field is never modified.
-func stripPrivateUse(s string) string {
+// StripPrivateUse drops Unicode private-use-area runes (U+E000–U+F8FF) from a
+// sender/status string for display. FFXIV prefixes party senders with PUA
+// glyphs (party slot icons such as U+E0E1/U+E091…) that only the game font can
+// render — outside the game they show as tofu boxes. Real symbols (★, ♥, …)
+// are kept; the raw sender field is never modified.
+func StripPrivateUse(s string) string {
 	return strings.Map(func(r rune) rune {
 		if r >= 0xE000 && r <= 0xF8FF {
 			return -1

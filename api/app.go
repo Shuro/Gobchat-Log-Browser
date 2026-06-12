@@ -270,7 +270,9 @@ func (a *App) GetLogThreads(filePath string) ([]ThreadDTO, error) {
 	out := make([]ThreadDTO, len(threads))
 	for i, th := range threads {
 		out[i] = ThreadDTO{
-			Sender:    th.Sender,
+			// Same display-only PUA strip the Raw view gets via status_symbol;
+			// the in-memory thread keeps the raw sender (ADR-0007).
+			Sender:    parser.StripPrivateUse(th.Sender),
 			Channel:   string(th.Channel),
 			Lines:     th.Lines,
 			Combined:  th.Combined,
@@ -284,14 +286,22 @@ func (a *App) GetLogThreads(filePath string) ([]ThreadDTO, error) {
 
 // --- Search ---
 
+// searchPool is how many raw index hits are fetched before the channel/sender
+// post-filters run; searchMax caps the list returned to the frontend.
+const (
+	searchPool = 1000
+	searchMax  = 200
+)
+
 // Search runs a query. filePath empty means global search across all known
 // logs; otherwise the search is restricted to that file. channels and sender
-// are optional post-filters.
-func (a *App) Search(text, filePath string, channels []string, sender string) ([]SearchResultDTO, error) {
+// are optional post-filters. The response is capped at searchMax hits and
+// flags truncation so the UI can say "refine your query".
+func (a *App) Search(text, filePath string, channels []string, sender string) (SearchResponse, error) {
 	// Ensure the relevant files are parsed and indexed.
 	if filePath != "" {
 		if _, err := a.store.GetEntries(filePath); err != nil {
-			return nil, fmt.Errorf("%s: %w", a.t("error.parseFailed"), err)
+			return SearchResponse{}, fmt.Errorf("%s: %w", a.t("error.parseFailed"), err)
 		}
 	} else {
 		for _, m := range a.store.List() {
@@ -299,7 +309,8 @@ func (a *App) Search(text, filePath string, channels []string, sender string) ([
 		}
 	}
 
-	results := a.index.Query(text, filePath, 0)
+	results := a.index.Query(text, filePath, searchPool)
+	poolFull := len(results) >= searchPool
 	channelSet := toSet(channels)
 	senderLower := strings.ToLower(strings.TrimSpace(sender))
 
@@ -327,7 +338,11 @@ func (a *App) Search(text, filePath string, channels []string, sender string) ([
 			Score:      r.Score,
 		})
 	}
-	return out, nil
+	truncated := poolFull || len(out) > searchMax
+	if len(out) > searchMax {
+		out = out[:searchMax]
+	}
+	return SearchResponse{Results: out, Truncated: truncated}, nil
 }
 
 // --- Tags ---

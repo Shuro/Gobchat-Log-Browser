@@ -257,7 +257,7 @@ async function save() {
               {{ t('settings.checkUpdatesOnStart') }}
             </label>
             <div class="about-actions">
-              <button class="ghost" @click="BrowserOpenURL(GITHUB_URL)">
+              <button @click="BrowserOpenURL(GITHUB_URL)">
                 {{ t('settings.github') }}
               </button>
               <button :disabled="updateState === 'checking'" @click="checkForUpdates()">

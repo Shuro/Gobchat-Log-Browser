@@ -25,6 +25,10 @@ const logs = useLogsStore()
     <button :disabled="search.loading" @click="search.run()">
       {{ search.loading ? '…' : t('search.button') }}
     </button>
+    <!-- Re-open the hidden results overlay after a hit was opened. -->
+    <button v-if="search.ran && !search.visible" class="ghost" @click="search.visible = true">
+      {{ t('search.backToResults', { count: search.results.length }) }}
+    </button>
     <button v-if="search.ran" class="ghost" @click="search.reset()">{{ t('search.clear') }}</button>
   </div>
 </template>

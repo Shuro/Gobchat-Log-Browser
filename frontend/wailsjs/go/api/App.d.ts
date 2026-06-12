@@ -30,6 +30,6 @@ export function SaveConfig(arg1:config.Config):Promise<void>;
 
 export function ScanLogs():Promise<Array<api.LogSummary>>;
 
-export function Search(arg1:string,arg2:string,arg3:Array<string>,arg4:string):Promise<Array<api.SearchResultDTO>>;
+export function Search(arg1:string,arg2:string,arg3:Array<string>,arg4:string):Promise<api.SearchResponse>;
 
 export function SetTags(arg1:string,arg2:Array<string>,arg3:string):Promise<void>;

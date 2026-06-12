@@ -20,6 +20,15 @@ function baseName(path: string): string {
 // player names without ambiguity. The "#" shown on tags is display-only.
 export type FilterSelection = { type: 'player' | 'tag'; value: string }
 
+function loadExcludedChannels(): string[] {
+  try {
+    const v = JSON.parse(localStorage.getItem('view.excludedChannels') ?? '[]')
+    return Array.isArray(v) ? v.filter((x) => typeof x === 'string') : []
+  } catch {
+    return []
+  }
+}
+
 // The logs store owns the overview list, the currently opened log (raw entries
 // or the optional in-memory reassembled threads), and that log's tags/note.
 export const useLogsStore = defineStore('logs', () => {
@@ -59,6 +68,12 @@ export const useLogsStore = defineStore('logs', () => {
   // only; the underlying entries keep the full sender).
   const hideRealm = ref(localStorage.getItem('view.hideRealm') === '1')
   watch(hideRealm, (v) => localStorage.setItem('view.hideRealm', v ? '1' : '0'))
+  // Channels hidden in the viewer (both modes). Sticky across logs and
+  // restarts so "always hide System noise" works like hideRealm.
+  const excludedChannels = ref<string[]>(loadExcludedChannels())
+  watch(excludedChannels, (v) =>
+    localStorage.setItem('view.excludedChannels', JSON.stringify(v)),
+  )
   // 0-based position within matchIndexes for Enter/Shift+Enter navigation.
   const currentMatch = ref(0)
 
@@ -134,16 +149,37 @@ export const useLogsStore = defineStore('logs', () => {
     )
   }
 
+  // Channel exclusion applies before the find filter in both modes.
+  const channelVisibleEntries = computed(() => {
+    const excluded = new Set(excludedChannels.value)
+    if (excluded.size === 0) return entries.value
+    return entries.value.filter((e) => !excluded.has(e.channel))
+  })
+
+  const channelVisibleThreads = computed(() => {
+    const excluded = new Set(excludedChannels.value)
+    if (excluded.size === 0) return threads.value
+    return threads.value.filter((t) => !excluded.has(t.channel))
+  })
+
+  function toggleChannel(channel: string) {
+    if (excludedChannels.value.includes(channel)) {
+      excludedChannels.value = excludedChannels.value.filter((c) => c !== channel)
+    } else {
+      excludedChannels.value = [...excludedChannels.value, channel]
+    }
+  }
+
   const visibleEntries = computed(() => {
     const q = filterText.value.trim().toLowerCase()
-    if (!q || filterMode.value === 'highlight') return entries.value
-    return entries.value.filter((e) => entryMatches(e, q))
+    if (!q || filterMode.value === 'highlight') return channelVisibleEntries.value
+    return channelVisibleEntries.value.filter((e) => entryMatches(e, q))
   })
 
   const visibleThreads = computed(() => {
     const q = filterText.value.trim().toLowerCase()
-    if (!q || filterMode.value === 'highlight') return threads.value
-    return threads.value.filter((t) => threadMatches(t, q))
+    if (!q || filterMode.value === 'highlight') return channelVisibleThreads.value
+    return channelVisibleThreads.value.filter((t) => threadMatches(t, q))
   })
 
   // Indexes of matching rows within the currently visible list, used for the
@@ -174,7 +210,7 @@ export const useLogsStore = defineStore('logs', () => {
     if (n > 0) currentMatch.value = (currentMatch.value - 1 + n) % n
   }
 
-  watch([filterText, viewMode, filterMode, messageOnly], () => {
+  watch([filterText, viewMode, filterMode, messageOnly, excludedChannels], () => {
     currentMatch.value = 0
   })
 
@@ -196,9 +232,9 @@ export const useLogsStore = defineStore('logs', () => {
     }
   }
 
-  async function openLog(path: string, line: number | null = null, force = false) {
+  async function openLog(path: string, line: number | null = null) {
     // Re-opening the same log to jump to a line: keep entries, just retarget.
-    if (!force && path === selectedPath.value && entries.value.length > 0) {
+    if (path === selectedPath.value && entries.value.length > 0) {
       viewMode.value = 'raw' // a line target only makes sense in the raw view
       targetLine.value = line
       return
@@ -236,14 +272,24 @@ export const useLogsStore = defineStore('logs', () => {
     }
   }
 
-  // reloadCurrent re-fetches the open log, bypassing the cache-skip, so new
-  // highlight markers / mention names take effect after a settings change.
+  // reloadCurrent re-fetches the open log in place — after a settings change
+  // (new markers / mention names) or a live file update. View mode, find text,
+  // and scroll position stay untouched; the scroller keeps its place because
+  // the row keys (line numbers) are stable.
   async function reloadCurrent() {
     if (!selectedPath.value) return
-    const wasReassembled = viewMode.value === 'reassembled'
-    threads.value = []
-    await openLog(selectedPath.value, null, true)
-    if (wasReassembled) await setViewMode('reassembled')
+    error.value = null
+    try {
+      entries.value = await GetLogEntries(selectedPath.value)
+      if (viewMode.value === 'reassembled') {
+        threads.value = await GetLogThreads(selectedPath.value)
+      } else {
+        // Drop stale threads so the next switch to reassembled refetches.
+        threads.value = []
+      }
+    } catch (e: unknown) {
+      error.value = String(e)
+    }
   }
 
   function clearTarget() {
@@ -258,13 +304,16 @@ export const useLogsStore = defineStore('logs', () => {
     allTagNames.value = await GetAllTagNames()
   }
 
-  async function saveTags(tagList: string[], note: string) {
-    const fn = currentTags.value.file_name || (selectedPath.value ? baseName(selectedPath.value) : '')
-    if (!fn) return
-    await SetTags(fn, tagList, note)
-    currentTags.value = { file_name: fn, tags: tagList, note }
+  // saveTags takes an explicit file name so the TagEditor can still save a
+  // dirty draft for the *previous* log after the user switched to another one.
+  async function saveTags(fileName: string, tagList: string[], note: string) {
+    if (!fileName) return
+    await SetTags(fileName, tagList, note)
+    if (currentTags.value.file_name === fileName) {
+      currentTags.value = { file_name: fileName, tags: tagList, note }
+    }
     // Reflect in the overview list immediately.
-    const s = summaries.value.find((x) => x.file_name === fn)
+    const s = summaries.value.find((x) => x.file_name === fileName)
     if (s) {
       s.tags = tagList
       s.note = note
@@ -296,6 +345,8 @@ export const useLogsStore = defineStore('logs', () => {
     filterMode,
     messageOnly,
     hideRealm,
+    excludedChannels,
+    toggleChannel,
     currentMatch,
     matchIndexes,
     nextMatch,

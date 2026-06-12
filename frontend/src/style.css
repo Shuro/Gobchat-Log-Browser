@@ -99,8 +99,8 @@ body {
   display: flex;
   gap: 6px;
   align-items: center;
-  flex: 1 1 auto;
-  max-width: 720px;
+  margin-left: auto;
+  flex: 0 1 auto;
 }
 .search-bar .scope {
   background: var(--bg);
@@ -110,7 +110,8 @@ body {
   padding: 5px 6px;
 }
 .search-input {
-  flex: 1 1 auto;
+  flex: 0 1 260px;
+  min-width: 160px;
   padding: 5px 10px;
   background: var(--bg);
   border: 1px solid var(--border);
@@ -126,9 +127,8 @@ button.ghost {
   line-height: 1;
   padding: 5px 9px;
 }
-/* Settings cog: pushed to the far right of the header, SVG centered. */
+/* Settings cog: sits right of the (right-aligned) search bar, SVG centered. */
 .app-header > .settings-btn {
-  margin-left: auto;
   display: inline-flex;
   align-items: center;
 }
@@ -386,10 +386,17 @@ button.ghost {
 .results-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 10px;
   padding: 8px 12px;
   border-bottom: 1px solid var(--border);
   color: var(--text-muted);
+}
+.results-header .results-close {
+  margin-left: auto;
+}
+.truncated-hint {
+  font-size: 12px;
+  font-style: italic;
 }
 .results-body {
   overflow-y: auto;
@@ -424,6 +431,11 @@ button.ghost {
 }
 .result-group li:hover {
   background: var(--bg-elevated);
+}
+/* The hit that was last opened in the viewer. */
+.result-group li.active {
+  background: var(--bg-elevated);
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 .hit-sender {
   flex: 0 0 auto;
@@ -465,11 +477,21 @@ button.ghost {
 }
 .player-filter {
   display: flex;
+  flex-direction: column;
   gap: 6px;
-  align-items: center;
-  flex-wrap: wrap;
+  align-items: stretch;
   padding: 6px 12px;
   border-bottom: 1px solid var(--border);
+}
+.filter-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.filter-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 .player-input {
   width: 100%;
@@ -543,6 +565,17 @@ button.ghost {
 .row-top .count {
   color: var(--text-muted);
 }
+.row-top-right {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+.item-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
 .participants {
   font-size: 12px;
   color: var(--text-muted);
@@ -557,6 +590,12 @@ button.ghost {
   align-items: center;
   margin-top: 4px;
   flex-wrap: wrap;
+}
+/* Note indicator in the log list; the tooltip carries the note text. */
+.note-ind {
+  font-size: 11px;
+  line-height: 1;
+  cursor: default;
 }
 .duration {
   font-size: 11px;
@@ -630,6 +669,41 @@ button.ghost {
   background: var(--accent);
   color: #06121f;
   font-weight: 700;
+}
+/* --- Viewer channel filter dropdown --- */
+.channels-wrap {
+  position: relative;
+}
+.channels-btn.active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--bg-elevated);
+}
+.channels-badge {
+  margin-left: 5px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.channels-pop {
+  position: absolute;
+  top: calc(100% + 2px);
+  right: 0;
+  min-width: 150px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 8px 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  z-index: 10;
+}
+.channels-pop .check {
+  margin-bottom: 4px;
+  white-space: nowrap;
+}
+.channels-pop .check:last-child {
+  margin-bottom: 0;
 }
 .find-group {
   display: flex;

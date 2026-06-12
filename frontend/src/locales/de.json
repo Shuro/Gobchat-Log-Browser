@@ -29,7 +29,8 @@
     "reassembling": "Füge zusammen…",
     "noThreads": "Keine Threads passen zum Filter.",
     "parts": "{count} Teile",
-    "hideRealm": "Weltennamen ausblenden"
+    "hideRealm": "Weltennamen ausblenden",
+    "channels": "Kanäle"
   },
   "search": {
     "scopeAll": "Alle Logs",
@@ -40,7 +41,11 @@
     "searching": "Suche…",
     "results": "{count} Treffer",
     "noMatches": "Keine Treffer.",
-    "close": "Schließen"
+    "close": "Schließen",
+    "allChannels": "Alle Kanäle",
+    "senderPlaceholder": "Absender…",
+    "backToResults": "Treffer ({count})",
+    "truncated": "Nicht alle Treffer werden angezeigt — verfeinere deine Suche."
   },
   "tags": {
     "addTag": "Tag hinzufügen…",
@@ -102,6 +107,7 @@
   "update": {
     "available": "Version {version} verfügbar",
     "open": "Release ansehen",
+    "skip": "Diese Version überspringen",
     "dismiss": "Ausblenden"
   },
   "setup": {

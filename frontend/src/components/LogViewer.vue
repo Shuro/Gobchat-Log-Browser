@@ -26,6 +26,25 @@ function onKeydown(e: KeyboardEvent) {
     filterInput.value?.focus()
     filterInput.value?.select()
   }
+  if (e.key === 'Escape') channelsOpen.value = false
+}
+
+// --- Channel visibility dropdown ------------------------------------------
+const channelsOpen = ref(false)
+const channelsWrap = ref<HTMLElement | null>(null)
+const logChannels = computed(() => [...(store.selectedSummary?.channels ?? [])].sort())
+// Exclusions are sticky across logs; the badge only counts channels that are
+// actually hidden in the open log.
+const hiddenChannelCount = computed(
+  () => logChannels.value.filter((c) => store.excludedChannels.includes(c)).length,
+)
+
+// The popover holds checkboxes, so it must survive clicks inside itself;
+// close only on clicks outside the wrap (and on Escape via onKeydown).
+function onDocMousedown(e: MouseEvent) {
+  if (channelsOpen.value && !channelsWrap.value?.contains(e.target as Node)) {
+    channelsOpen.value = false
+  }
 }
 // Pre-fill the scroller's reactive size map with estimated heights for all
 // rows it hasn't measured yet. The scroller assumes min-item-size for
@@ -91,10 +110,13 @@ function onWindowResize() {
 onMounted(() => {
   window.addEventListener('keydown', onKeydown)
   window.addEventListener('resize', onWindowResize)
+  document.addEventListener('mousedown', onDocMousedown)
 })
 onUnmounted(() => {
   window.removeEventListener('keydown', onKeydown)
   window.removeEventListener('resize', onWindowResize)
+  document.removeEventListener('mousedown', onDocMousedown)
+  if (targetClearTimer) clearTimeout(targetClearTimer)
 })
 
 const hasQuery = computed(() => store.filterText.trim().length > 0)
@@ -146,6 +168,9 @@ const tickPercents = computed<number[]>(() => {
 })
 
 // When a search result targets a line, scroll it into view (raw mode only).
+// The target highlight clears itself after a moment instead of sticking to
+// the row until another log is opened.
+let targetClearTimer: ReturnType<typeof setTimeout> | undefined
 watch(
   () => [store.targetLine, store.entries] as const,
   async () => {
@@ -156,6 +181,8 @@ watch(
     if (idx >= 0 && scroller.value?.scrollToItem) {
       scroller.value.scrollToItem(idx)
     }
+    if (targetClearTimer) clearTimeout(targetClearTimer)
+    targetClearTimer = setTimeout(() => store.clearTarget(), 2500)
   },
   { flush: 'post' },
 )
@@ -196,6 +223,26 @@ watch(
             >
               {{ t('viewer.reassembled') }}
             </button>
+          </div>
+          <div v-if="logChannels.length" ref="channelsWrap" class="channels-wrap">
+            <button
+              class="channels-btn"
+              :class="{ active: hiddenChannelCount > 0 }"
+              :title="t('viewer.channels')"
+              @click="channelsOpen = !channelsOpen"
+            >
+              {{ t('viewer.channels') }}<span v-if="hiddenChannelCount" class="channels-badge">−{{ hiddenChannelCount }}</span>
+            </button>
+            <div v-if="channelsOpen" class="channels-pop">
+              <label v-for="ch in logChannels" :key="ch" class="check">
+                <input
+                  type="checkbox"
+                  :checked="!store.excludedChannels.includes(ch)"
+                  @change="store.toggleChannel(ch)"
+                />
+                {{ ch }}
+              </label>
+            </div>
           </div>
           <button
             class="icon-btn toggle"
