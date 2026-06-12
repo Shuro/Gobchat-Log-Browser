@@ -12,6 +12,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          # Full history + tags so release notes can diff against the previous tag.
+          fetch-depth: 0
 
       - uses: actions/setup-go@v6
         with:
@@ -59,9 +62,28 @@ jobs:
           Compress-Archive -Path build\bin\gobchat-log-browser.exe -DestinationPath "build\bin\gobchat-log-browser-v$env:VERSION-windows-amd64-portable.zip"
           Move-Item build\bin\gobchat-log-browser-amd64-installer.exe "build\bin\gobchat-log-browser-v$env:VERSION-windows-amd64-installer.exe"
 
+      # Release notes are the commit subjects since the previous tag, limited to
+      # changes that affect the program itself (docs/chore/ci/test are dropped).
+      - name: Generate release notes from commits
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $prev = git describe --tags --abbrev=0 "$tag^" 2>$null
+          if ($LASTEXITCODE -ne 0) { $prev = $null }
+          $range = if ($prev) { "$prev..$tag" } else { $tag }
+          $bullets = git log $range --no-merges --pretty=format:'%s' |
+            Where-Object { $_ -and $_ -notmatch '^(docs|chore|ci|test|style)(\(.*\))?:' } |
+            ForEach-Object { "- $_" }
+          if (-not $bullets) { $bullets = @("- Maintenance release.") }
+          $notes = @("## Changes", "") + $bullets
+          if ($prev) {
+            $notes += @("", "**Full Changelog**: https://github.com/${{ github.repository }}/compare/$prev...$tag")
+          }
+          $notes -join "`n" | Set-Content RELEASE_NOTES.md
+          Get-Content RELEASE_NOTES.md
+
       - uses: softprops/action-gh-release@v3
         with:
-          generate_release_notes: true
+          body_path: RELEASE_NOTES.md
           files: |
             build/bin/gobchat-log-browser-v*-windows-amd64-portable.zip
             build/bin/gobchat-log-browser-v*-windows-amd64-installer.exe
