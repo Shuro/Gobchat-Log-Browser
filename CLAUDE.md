@@ -23,17 +23,25 @@ $env:Path = [Environment]::GetEnvironmentVariable("Path","Machine")+";"+[Environ
 - Backend tests: `go test ./...` — single test: `go test ./internal/parser -run TestName`
 - Lint/vet: `go vet ./...`, `gofmt -l .`
 - Frontend type-check + build: `cd frontend && npm run build` (runs `vue-tsc --noEmit && vite build`)
+- Regenerate frontend bindings: `wails generate module` — required after changing
+  `config.Config` or any DTO, and it must run *before* the frontend type-check.
+- Release: push a semver tag `vX.Y.Z` → CI builds the installer + portable zip and
+  publishes the GitHub release (`.github/workflows/release.yml`, ADR-0011).
 
 ## Hard constraints
 
 - **Log files are strictly read-only.** Never write, rename, move, or modify them. Reassembly
   and reordering are in-memory display only (ADR-0007).
-- **All `{message}` content is player-authored.** Split markers (`(1/2)`, trailing ` >`,
-  leading `> `), OOC `((…))`, and speech/emote quotes are player RP conventions — treat them
-  as best-effort heuristics, never guaranteed structure. RP delimiters stay configurable (ADR-0006).
+- **All `{message}` content is player-authored.** Split markers (`(N/M)`) and the
+  leading/trailing continuation markers (`>`, `->`, `>>`, `+` — see ADR-0006), OOC `((…))`,
+  and speech/emote quotes are player RP conventions — treat them as best-effort heuristics,
+  never guaranteed structure. RP delimiters stay configurable (ADR-0006).
 - Lines that fail to parse must still surface as `ChannelUnknown` with raw text — never drop lines.
 - **Architectural decisions must be recorded as ADRs** in `docs/adr/` (Nygard template,
   `docs/adr/0000-template.md`), committed *with* the code change, not after.
+- `frontend/wailsjs/**` is generated — never hand-edit; regenerate via `wails generate module`.
+- The frontend locale files `frontend/src/locales/en.json` and `de.json` must always change
+  together (same keys in both).
 
 ## Log format
 
@@ -63,10 +71,12 @@ Wails bindings.
 - `internal/tags` — filename-keyed JSON sidecars (tags + notes)
 - `internal/config` — config + atomic load/save + platform paths
 - `internal/i18n` — embedded backend localizer (en/de)
+- `internal/version` — app version, injected at release time via ldflags (dev builds: "dev")
+- `internal/update` — opt-in GitHub release check + semver compare (ADR-0012)
 - `api/` — the Wails binding layer (`App` + DTOs in `dto.go`); the only surface the frontend
   calls. Emits `logs:scanned` and `log:new|updated|removed` events.
 - `frontend/src` — Vue 3 + Pinia + vue-i18n + vue-virtual-scroller; backend locale strings
   are merged at runtime via `GetLocaleMessages`.
 
-Design rationale lives in `docs/adr/` (0001–0010) — read the relevant ADR before changing
+Design rationale lives in `docs/adr/` — read the relevant ADR before changing
 parsing, reassembly, search, or storage behavior.

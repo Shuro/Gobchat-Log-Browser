@@ -41,14 +41,16 @@
 
 - **Log overview** — all logs at a glance with date, participants, message count, and duration.
 - **Roleplay highlighting** — dialogue, emotes, and out-of-character text are color-coded; the marker characters are configurable and default to Gobchat's conventions.
-- **Raw & reassembled views** — view a log in its original file order, or let the app stitch interrupted multi-part messages (`(1/2)`, trailing `>`, …) back together. Reassembly is a best-effort heuristic and happens purely in memory — files are never changed.
+- **Raw & reassembled views** — view a log in its original file order, or let the app stitch interrupted multi-part messages (`(1/2)`, trailing `>`, `->`, `>>`, `+`, …) back together, with each post's start and end time. Reassembly is a best-effort heuristic and happens purely in memory — files are never changed.
 - **Search everywhere** — full-text search across all logs, plus find-in-log with match navigation (Enter / Shift+Enter) and match ticks on the scrollbar.
-- **Player filter with pinned characters** — filter the log list by participant; your own roleplay characters stay pinned to the top.
-- **Mentions** — highlight lines that mention your character names.
+- **Player & tag filter** — filter the log list by participants and `#tags` (combined as AND); your own roleplay characters stay pinned to the top, and tag chips in the list are clickable.
+- **Highlighter** — highlight lines that mention your character names.
 - **Tags & notes** — tag logs and attach notes; stored as JSON sidecars, never inside the log files.
+- **Realm toggle** — hide `[World]` suffixes behind sender names with one click.
 - **Live updates** — the log list refreshes automatically while Gobchat writes new logs.
 - **Fast startup** — a persistent metadata index means even large log collections open quickly.
-- **First-run wizard, dark & light themes, English & German UI.**
+- **Opt-in update check** — get notified about new releases; nothing is downloaded automatically.
+- **First-run wizard, dark & light themes with customizable highlight colors, English & German UI.**
 
 ## Getting started
 

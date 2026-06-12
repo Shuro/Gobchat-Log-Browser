@@ -41,14 +41,16 @@ Der **Gobchat Log Browser** ist eine Desktop-App, die aus diesen Log-Dateien ein
 
 - **Log-Übersicht** — alle Logs auf einen Blick mit Datum, Teilnehmern, Nachrichtenanzahl und Dauer.
 - **Rollenspiel-Hervorhebung** — Sprache, Emotes und Out-of-Character-Text werden farblich markiert; die Marker sind konfigurierbar und entsprechen standardmäßig den Gobchat-Konventionen.
-- **Roh- & zusammengefügte Ansicht** — zeige ein Log in der ursprünglichen Dateireihenfolge an oder lass die App unterbrochene, mehrteilige Nachrichten (`(1/2)`, abschließendes `>`, …) wieder zusammenfügen. Das Zusammenfügen ist eine Best-Effort-Heuristik und passiert ausschließlich im Speicher — Dateien werden nie verändert.
+- **Roh- & zusammengefügte Ansicht** — zeige ein Log in der ursprünglichen Dateireihenfolge an oder lass die App unterbrochene, mehrteilige Nachrichten (`(1/2)`, abschließendes `>`, `->`, `>>`, `+`, …) wieder zusammenfügen, inklusive Start- und Endzeit jedes Posts. Das Zusammenfügen ist eine Best-Effort-Heuristik und passiert ausschließlich im Speicher — Dateien werden nie verändert.
 - **Überall suchen** — Volltextsuche über alle Logs sowie Suche im aktuellen Log mit Treffer-Navigation (Enter / Umschalt+Enter) und Treffer-Markierungen auf der Scrollleiste.
-- **Spieler-Filter mit angepinnten Charakteren** — filtere die Log-Liste nach Teilnehmern; deine eigenen Rollenspiel-Charaktere bleiben oben angepinnt.
-- **Mentions** — Zeilen hervorheben, in denen deine Charakternamen vorkommen.
+- **Spieler- & Tag-Filter** — filtere die Log-Liste nach Teilnehmern und `#Tags` (UND-verknüpft); deine eigenen Rollenspiel-Charaktere bleiben oben angepinnt, und Tag-Chips in der Liste sind klickbar.
+- **Highlighter** — Zeilen hervorheben, in denen deine Charakternamen vorkommen.
 - **Tags & Notizen** — versieh Logs mit Tags und Notizen; gespeichert als JSON-Sidecar-Dateien, niemals in den Log-Dateien selbst.
+- **Welten-Schalter** — blende `[Welt]`-Zusätze hinter Spielernamen mit einem Klick aus.
 - **Live-Aktualisierung** — die Log-Liste aktualisiert sich automatisch, während Gobchat neue Logs schreibt.
 - **Schneller Start** — dank persistentem Metadaten-Index öffnen sich auch große Log-Sammlungen zügig.
-- **Einrichtungsassistent beim ersten Start, dunkles & helles Design, Oberfläche auf Deutsch & Englisch.**
+- **Opt-in-Update-Prüfung** — werde über neue Versionen informiert; es wird nichts automatisch heruntergeladen.
+- **Einrichtungsassistent beim ersten Start, dunkles & helles Design mit anpassbaren Hervorhebungsfarben, Oberfläche auf Deutsch & Englisch.**
 
 ## Erste Schritte
 
