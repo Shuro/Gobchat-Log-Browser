@@ -46,10 +46,9 @@ Der **Gobchat Log Browser** ist eine Desktop-App, die aus diesen Log-Dateien ein
 - **Spieler- & Tag-Filter** — filtere die Log-Liste nach Teilnehmern und `#Tags` (UND-verknüpft); deine eigenen Rollenspiel-Charaktere bleiben oben angepinnt, und Tag-Chips in der Liste sind klickbar.
 - **Highlighter** — Zeilen hervorheben, in denen deine Charakternamen vorkommen.
 - **Tags & Notizen** — versieh Logs mit Tags und Notizen; gespeichert als JSON-Sidecar-Dateien, niemals in den Log-Dateien selbst.
-- **Welten-Schalter** — blende `[Welt]`-Zusätze hinter Spielernamen mit einem Klick aus.
 - **Live-Aktualisierung** — die Log-Liste aktualisiert sich automatisch, während Gobchat neue Logs schreibt.
 - **Schneller Start** — dank persistentem Metadaten-Index öffnen sich auch große Log-Sammlungen zügig.
-- **Opt-in-Update-Prüfung** — werde über neue Versionen informiert; es wird nichts automatisch heruntergeladen.
+- **Opt-in-Update-Prüfung** — werde über neue Versionen informiert.
 - **Einrichtungsassistent beim ersten Start, dunkles & helles Design mit anpassbaren Hervorhebungsfarben, Oberfläche auf Deutsch & Englisch.**
 
 ## Erste Schritte

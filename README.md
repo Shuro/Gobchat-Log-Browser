@@ -46,10 +46,9 @@
 - **Player & tag filter** — filter the log list by participants and `#tags` (combined as AND); your own roleplay characters stay pinned to the top, and tag chips in the list are clickable.
 - **Highlighter** — highlight lines that mention your character names.
 - **Tags & notes** — tag logs and attach notes; stored as JSON sidecars, never inside the log files.
-- **Realm toggle** — hide `[World]` suffixes behind sender names with one click.
 - **Live updates** — the log list refreshes automatically while Gobchat writes new logs.
 - **Fast startup** — a persistent metadata index means even large log collections open quickly.
-- **Opt-in update check** — get notified about new releases; nothing is downloaded automatically.
+- **Opt-in update check** — get notified about new releases.
 - **First-run wizard, dark & light themes with customizable highlight colors, English & German UI.**
 
 ## Getting started
