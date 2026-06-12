@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useLogsStore } from '../stores/logs'
+import { useLogsStore, type FilterSelection } from '../stores/logs'
 import { useConfigStore } from '../stores/config'
 
 const { t } = useI18n()
@@ -19,19 +19,54 @@ const inputEl = ref<HTMLInputElement | null>(null)
 // The user's own characters (settings) are pinned above the other names.
 const pinned = computed(() => new Set(configStore.cfg?.roleplay_characters ?? []))
 
-const suggestions = computed(() => {
+function label(sel: FilterSelection): string {
+  return sel.type === 'tag' ? `#${sel.value}` : sel.value
+}
+
+// Group order: pinned characters, then tags, then the (long) player list —
+// nobody would scroll past hundreds of players to reach the tags.
+const suggestions = computed<FilterSelection[]>(() => {
   const q = input.value.trim().toLowerCase()
-  let pool = store.allPlayers.filter((p) => !store.selectedPlayers.includes(p))
-  if (q) pool = pool.filter((p) => p.toLowerCase().includes(q))
-  return [...pool.filter((p) => pinned.value.has(p)), ...pool.filter((p) => !pinned.value.has(p))]
+  const tagQ = q.startsWith('#') ? q.slice(1) : q
+
+  const selected = (sel: FilterSelection) =>
+    store.selectedFilters.some((f) => f.type === sel.type && f.value === sel.value)
+
+  let players = store.allPlayers
+    .map((p): FilterSelection => ({ type: 'player', value: p }))
+    .filter((s) => !selected(s))
+  if (q) players = players.filter((s) => s.value.toLowerCase().includes(q))
+
+  let tags = store.allTags
+    .map((v): FilterSelection => ({ type: 'tag', value: v }))
+    .filter((s) => !selected(s))
+  if (tagQ) tags = tags.filter((s) => s.value.toLowerCase().includes(tagQ))
+
+  return [
+    ...players.filter((s) => pinned.value.has(s.value)),
+    ...tags,
+    ...players.filter((s) => !pinned.value.has(s.value)),
+  ]
 })
 
-// Index of the first unpinned suggestion; the divider is drawn above it.
-const pinnedCount = computed(() => suggestions.value.filter((p) => pinned.value.has(p)).length)
+// Indexes of the first tag / first unpinned player; dividers are drawn above them.
+const pinnedCount = computed(
+  () => suggestions.value.filter((s) => s.type === 'player' && pinned.value.has(s.value)).length,
+)
+const tagCount = computed(() => suggestions.value.filter((s) => s.type === 'tag').length)
 
-function add(name: string) {
-  store.addPlayer(name)
-  if (store.selectedPlayers.includes(name)) input.value = ''
+function isGroupStart(i: number): boolean {
+  return (
+    (pinnedCount.value > 0 && i === pinnedCount.value) ||
+    (tagCount.value > 0 && i === pinnedCount.value + tagCount.value && i < suggestions.value.length)
+  )
+}
+
+function add(sel: FilterSelection) {
+  store.addFilter(sel)
+  if (store.selectedFilters.some((f) => f.type === sel.type && f.value === sel.value)) {
+    input.value = ''
+  }
   activeIdx.value = -1
   open.value = false
   // Suggestion clicks keep focus on the input (mousedown.prevent), and a
@@ -42,10 +77,11 @@ function add(name: string) {
 
 function onEnter() {
   const list = suggestions.value
+  const q = input.value.trim().toLowerCase()
   const pick =
     activeIdx.value >= 0
       ? list[activeIdx.value]
-      : list.find((p) => p.toLowerCase() === input.value.trim().toLowerCase()) ?? list[0]
+      : list.find((s) => s.value.toLowerCase() === q || label(s).toLowerCase() === q) ?? list[0]
   if (pick) add(pick)
 }
 
@@ -67,12 +103,12 @@ watch(activeIdx, async () => {
 <template>
   <div class="player-filter">
     <span
-      v-for="p in store.selectedPlayers"
-      :key="p"
+      v-for="f in store.selectedFilters"
+      :key="f.type + ':' + f.value"
       class="tag removable"
-      @click="store.removePlayer(p)"
+      @click="store.removeFilter(f)"
     >
-      {{ p }} <span class="x">✕</span>
+      {{ label(f) }} <span class="x">✕</span>
     </span>
     <div class="suggest-wrap">
       <input
@@ -90,16 +126,16 @@ watch(activeIdx, async () => {
       />
       <ul v-if="open && suggestions.length" ref="listEl" class="suggest-list">
         <li
-          v-for="(p, i) in suggestions"
-          :key="p"
-          :class="{ active: i === activeIdx, 'group-sep': pinnedCount > 0 && i === pinnedCount }"
-          @mousedown.prevent="add(p)"
+          v-for="(s, i) in suggestions"
+          :key="s.type + ':' + s.value"
+          :class="{ active: i === activeIdx, 'group-sep': isGroupStart(i) }"
+          @mousedown.prevent="add(s)"
         >
-          {{ p }}
+          {{ label(s) }}
         </li>
       </ul>
     </div>
-    <button v-if="store.selectedPlayers.length > 0" class="clear" @click="store.clearPlayers()">
+    <button v-if="store.selectedFilters.length > 0" class="clear" @click="store.clearFilters()">
       {{ t('nav.clearFilter') }}
     </button>
   </div>

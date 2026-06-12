@@ -23,6 +23,10 @@ type Config struct {
 	ChannelFilters      map[string]bool     `json:"channel_filters"`
 	CheckUpdatesOnStart bool                `json:"check_updates_on_start"` // opt-in update check (docs/adr/0012)
 	SetupWizardVersion  int                 `json:"setup_wizard_version"`   // last completed wizard version; 0 = never/pre-versioning
+	// Colors holds per-theme highlight color overrides: theme ("dark"|"light")
+	// → category ("speech"|"emote"|"ooc"|"mention-fg"|"mention-bg") → hex
+	// color. A missing entry means the theme's default color.
+	Colors map[string]map[string]string `json:"colors"`
 }
 
 // SetupWizardCurrentVersion is bumped whenever the setup wizard gains content
@@ -48,6 +52,7 @@ func DefaultConfig() Config {
 		ChannelFilters:      map[string]bool{},
 		CheckUpdatesOnStart: false, // never phone home without consent
 		SetupWizardVersion:  0,
+		Colors:              map[string]map[string]string{},
 	}
 }
 
@@ -71,6 +76,9 @@ func Load(path string) (Config, error) {
 	}
 	if cfg.ChannelFilters == nil {
 		cfg.ChannelFilters = map[string]bool{}
+	}
+	if cfg.Colors == nil {
+		cfg.Colors = map[string]map[string]string{}
 	}
 	return cfg, nil
 }

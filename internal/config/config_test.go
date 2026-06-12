@@ -70,6 +70,29 @@ func TestLoadLegacyConfigDefaultsUpdateFields(t *testing.T) {
 	if got.SetupWizardVersion >= SetupWizardCurrentVersion {
 		t.Fatalf("legacy config must compare below SetupWizardCurrentVersion")
 	}
+	// Pre-colors configs must come back with a non-nil map so the frontend can
+	// index it without null guards everywhere.
+	if got.Colors == nil {
+		t.Fatalf("legacy config must backfill an empty Colors map")
+	}
+}
+
+func TestSaveLoadColorOverrides(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+
+	cfg := DefaultConfig()
+	cfg.Colors = map[string]map[string]string{"dark": {"speech": "#ff0000"}}
+	if err := Save(path, cfg); err != nil {
+		t.Fatalf("Save: %v", err)
+	}
+	got, err := Load(path)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if got.Colors["dark"]["speech"] != "#ff0000" {
+		t.Fatalf("Colors not persisted: %+v", got.Colors)
+	}
 }
 
 func TestLoadMissingReturnsDefaults(t *testing.T) {

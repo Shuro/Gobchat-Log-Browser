@@ -53,7 +53,12 @@ func Reassemble(entries []parser.LogEntry) []Thread {
 
 	for _, e := range entries {
 		key := e.Sender
-		st := open[key]
+		var st *openState
+		// System lines without a sender (e.g. the game's Error channel) must
+		// never be glued together just because they share the empty key.
+		if key != "" {
+			st = open[key]
+		}
 
 		appendable := false
 		if st != nil {
@@ -98,7 +103,7 @@ func Reassemble(entries []parser.LogEntry) []Thread {
 			lastPartIndex: e.PartIndex,
 			expectMore:    expectsMore(e),
 		}
-		if ns.expectMore {
+		if ns.expectMore && key != "" {
 			open[key] = ns // supersedes any prior open thread for this sender
 		} else {
 			delete(open, key)
@@ -114,24 +119,31 @@ func Reassemble(entries []parser.LogEntry) []Thread {
 
 var partTrimRe = regexp.MustCompile(`\s*\(?\d{1,3}\s*/\s*\d{1,3}\)?\s*$`)
 
+// continuationMarkers mirrors the detection set in internal/parser. Ordered
+// longest-first so trimming only ever removes a whole marker ("text ->" must
+// not become "text -", "text >>" not "text >").
+var continuationMarkers = []string{"->", ">>", ">", "+"}
+
 // trimMarkers strips leading/trailing continuation markers and a trailing
 // multi-part marker from a message for display in a combined thread. It leaves
 // the inner roleplay punctuation untouched.
 func trimMarkers(msg string) string {
-	s := strings.TrimLeft(strings.TrimSpace(msg), " ")
-	switch {
-	case strings.HasPrefix(s, `"> `):
-		s = s[len(`"> `):]
-	case strings.HasPrefix(s, `">`):
-		s = s[len(`">`):]
-	case strings.HasPrefix(s, "> "):
-		s = s[len("> "):]
-	case strings.HasPrefix(s, ">"):
-		s = s[len(">"):]
+	s := strings.TrimSpace(msg)
+	// A leading marker may sit behind an opening speech quote; the quote is
+	// dropped together with the marker. A quote without a marker stays.
+	lead := strings.TrimPrefix(s, `"`)
+	for _, m := range continuationMarkers {
+		if strings.HasPrefix(lead, m) {
+			s = strings.TrimLeft(lead[len(m):], " ")
+			break
+		}
 	}
 	s = strings.TrimRight(s, " ")
-	if strings.HasSuffix(s, ">") {
-		s = strings.TrimRight(s[:len(s)-1], " ")
+	for _, m := range continuationMarkers {
+		if strings.HasSuffix(s, m) {
+			s = strings.TrimRight(s[:len(s)-len(m)], " ")
+			break
+		}
 	}
 	s = partTrimRe.ReplaceAllString(s, "")
 	return strings.TrimSpace(s)

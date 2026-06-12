@@ -46,7 +46,14 @@ function formatDate(iso: string): string {
         </div>
         <div class="row-bottom">
           <span v-if="log.duration" class="duration">{{ log.duration }}</span>
-          <span v-for="t in log.tags" :key="t" class="tag">{{ t }}</span>
+          <span
+            v-for="tg in log.tags"
+            :key="tg"
+            class="tag clickable"
+            :title="t('nav.filterByTag')"
+            @click.stop="store.addFilter({ type: 'tag', value: tg })"
+            >{{ tg }}</span
+          >
         </div>
       </li>
     </ul>

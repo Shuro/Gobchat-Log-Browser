@@ -48,12 +48,16 @@ async function save() {
       <span v-for="t in draftTags" :key="t" class="tag removable" @click="removeTag(t)">
         {{ t }} <span class="x">✕</span>
       </span>
+      <!-- Blur commits the typed text as a tag too; it fires before a click on
+           Save, so a pending tag is included in that save. (If Save was still
+           disabled, the blur-added chip enables it for a second click.) -->
       <input
         v-model="newTag"
         class="tag-input"
         list="all-tags"
         :placeholder="t('tags.addTag')"
         @keyup.enter="addTag"
+        @blur="addTag"
       />
       <datalist id="all-tags">
         <option v-for="t in store.allTagNames" :key="t" :value="t" />

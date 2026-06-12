@@ -121,6 +121,10 @@ export function estimateEntryHeight(e: api.EntryDTO, containerWidth: number): nu
 export function estimateThreadHeight(t: api.ThreadDTO, containerWidth: number): number {
   let fixed = channelWidth(t.channel) + textWidth(t.sender, SENDER_FONT)
   let children = 3 // channel-tag, sender, message
+  if (t.start_time && !isNaN(new Date(t.start_time).getTime())) {
+    fixed += timeWidth(t.start_time) // start/end stack vertically in one column
+    children++
+  }
   if (t.lines.length > 1) {
     fixed += textWidth(`${t.lines.length} parts`, SMALL_FONT) // i18n approximation
     children++

@@ -102,12 +102,72 @@ func TestParseSenderVariants(t *testing.T) {
 		{"★M'iqo Tester [Shiva]", "★", "M'iqo Tester", "[Shiva]"},
 		{"♥Darya Khah [Shiva]", "♥", "Darya Khah", "[Shiva]"},
 		{"Plain Name [Moogle]", "", "Plain Name", "[Moogle]"},
+		// FFXIV prefixes party senders with private-use glyphs (slot icons)
+		// that render as tofu boxes outside the game; they must be dropped
+		// from the display symbol while real symbols like ★ stay.
+		{"Nevio Ateius", "", "Nevio Ateius", ""},
+		{"★Norah Zhvan [Shiva]", "★", "Norah Zhvan", "[Shiva]"},
 	}
 	for _, c := range cases {
 		sym, name, realm := parseSender(c.raw)
 		if sym != c.symbol || name != c.name || realm != c.realm {
 			t.Fatalf("parseSender(%q) = (%q,%q,%q), want (%q,%q,%q)",
 				c.raw, sym, name, realm, c.symbol, c.name, c.realm)
+		}
+	}
+}
+
+// The game writes system lines (e.g. its Error channel) with an empty sender;
+// they are valid log content and must parse as their real channel instead of
+// degrading to Unknown.
+func TestParseLineEmptySenderSystemLine(t *testing.T) {
+	cf, err := BuildRegex(DefaultFormat)
+	if err != nil {
+		t.Fatalf("BuildRegex: %v", err)
+	}
+	line := `Error [2026-06-11 20:56:41+02:00] : Message to Max Mustermiqote could not be sent.`
+	e, perr := parseLine(line, 1, cf)
+	if perr != nil {
+		t.Fatalf("empty-sender system line reported a parse error: %+v", perr)
+	}
+	if e.Channel != Channel("Error") {
+		t.Fatalf("channel = %q, want Error", e.Channel)
+	}
+	if e.Sender != "" || e.DisplayName != "" {
+		t.Fatalf("sender = %q / display = %q, want empty", e.Sender, e.DisplayName)
+	}
+	if e.Message != "Message to Max Mustermiqote could not be sent." {
+		t.Fatalf("message = %q", e.Message)
+	}
+}
+
+// Continuation markers are player conventions (docs/adr/0006): the full
+// hardcoded set >, ->, >>, + must be detected on both ends, including the
+// accepted false positive of a message that simply ends in "+".
+func TestDetectHeuristicsContinuationMarkers(t *testing.T) {
+	cases := []struct {
+		message         string
+		hasCont, isCont bool
+	}{
+		{"ponders the question >", true, false},
+		{"ponders the question ->", true, false},
+		{"ponders the question >>", true, false},
+		{"brings snacks for 5+", true, false}, // accepted heuristic false positive
+		{"> and continues", false, true},
+		{"-> and continues", false, true},
+		{">> and continues", false, true},
+		{"+ and continues", false, true},
+		{`"> quoted continuation."`, false, true},
+		{`"-> quoted continuation."`, false, true},
+		{"a + b = c", false, false},
+		{"a plain message.", false, false},
+	}
+	for _, c := range cases {
+		e := LogEntry{Message: c.message}
+		detectHeuristics(&e)
+		if e.HasContinuation != c.hasCont || e.IsContinuation != c.isCont {
+			t.Fatalf("detectHeuristics(%q): has=%v is=%v, want has=%v is=%v",
+				c.message, e.HasContinuation, e.IsContinuation, c.hasCont, c.isCont)
 		}
 	}
 }

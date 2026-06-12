@@ -8,6 +8,7 @@ const props = defineProps<{
   highlight?: boolean
   query?: string
   messageOnly?: boolean
+  hideRealm?: boolean
 }>()
 
 const time = computed(() => {
@@ -20,6 +21,11 @@ const time = computed(() => {
 
 const channelClass = computed(() => `channel-${(props.entry.channel || 'unknown').toLowerCase()}`)
 const isUnknown = computed(() => props.entry.channel === 'Unknown')
+// System lines (e.g. the Error channel) have no sender at all; skip the empty
+// sender column instead of rendering a gap.
+const hasSender = computed(
+  () => !isUnknown.value && Boolean(props.entry.display_name || props.entry.sender),
+)
 
 const spanSegments = computed(() =>
   props.entry.spans.map((s) => splitMatches(s.text, props.query ?? '')),
@@ -36,7 +42,7 @@ const nameSegments = computed(() =>
   <div class="entry" :class="[channelClass, { target: highlight }]">
     <span class="time">{{ time }}</span>
     <span class="channel-tag">{{ entry.channel }}</span>
-    <span v-if="!isUnknown" class="sender" :title="entry.sender">
+    <span v-if="hasSender" class="sender" :title="entry.sender">
       <span v-if="entry.status_symbol" class="symbol">{{ entry.status_symbol }}</span>
       <span class="name"
         ><template v-for="(seg, j) in nameSegments" :key="j"
@@ -44,7 +50,7 @@ const nameSegments = computed(() =>
           ><template v-else>{{ seg.text }}</template></template
         ></span
       >
-      <span v-if="entry.realm" class="realm">{{ entry.realm }}</span>
+      <span v-if="entry.realm && !hideRealm" class="realm">{{ entry.realm }}</span>
     </span>
     <span class="message">
       <span

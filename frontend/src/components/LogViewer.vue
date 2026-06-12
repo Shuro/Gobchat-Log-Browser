@@ -197,6 +197,14 @@ watch(
               {{ t('viewer.reassembled') }}
             </button>
           </div>
+          <button
+            class="icon-btn toggle"
+            :class="{ active: store.hideRealm }"
+            :title="t('viewer.hideRealm')"
+            @click="store.hideRealm = !store.hideRealm"
+          >
+            🌐
+          </button>
           <div class="find-group">
             <input
               ref="filterInput"
@@ -281,6 +289,7 @@ watch(
                 :entry="item"
                 :query="store.filterText"
                 :message-only="store.messageOnly"
+                :hide-realm="store.hideRealm"
                 :highlight="item.line_number === store.targetLine || index === activeIndex"
               />
             </DynamicScrollerItem>
@@ -317,6 +326,7 @@ watch(
                 :thread="item"
                 :query="store.filterText"
                 :message-only="store.messageOnly"
+                :hide-realm="store.hideRealm"
                 :highlight="index === activeIndex"
               />
             </DynamicScrollerItem>

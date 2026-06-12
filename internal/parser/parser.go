@@ -153,23 +153,46 @@ func parseSender(s string) (symbol, display, realm string) {
 		j++
 	}
 	if j > 0 {
-		symbol = string(runes[:j])
+		symbol = stripPrivateUse(string(runes[:j]))
 		display = strings.TrimSpace(string(runes[j:]))
 	}
 	return symbol, display, realm
 }
 
+// stripPrivateUse drops Unicode private-use-area runes (U+E000–U+F8FF) from a
+// status symbol. FFXIV prefixes party senders with PUA glyphs (party slot
+// icons such as U+E0E1/U+E091…) that only the game font can render — outside
+// the game they show as tofu boxes. Real symbols (★, ♥, …) are kept; the raw
+// sender field is never modified.
+func stripPrivateUse(s string) string {
+	return strings.Map(func(r rune) rune {
+		if r >= 0xE000 && r <= 0xF8FF {
+			return -1
+		}
+		return r
+	}, s)
+}
+
 var partRe = regexp.MustCompile(`\(?(\d{1,3})\s*/\s*(\d{1,3})\)?\s*$`)
+
+// continuationMarkers are the hardcoded player conventions for "post continues"
+// (trailing) / "continues a post" (leading). Best-effort heuristics, see
+// docs/adr/0006; ordered longest-first so trimming never strips a partial
+// marker (e.g. "->" before ">").
+var continuationMarkers = []string{"->", ">>", ">", "+"}
 
 // detectHeuristics fills the low-confidence continuation/multi-part fields from
 // the message text. These are player conventions and may be wrong or absent.
 func detectHeuristics(e *LogEntry) {
 	rTrim := strings.TrimRight(e.Message, " \t")
-	if strings.HasSuffix(rTrim, ">") {
-		e.HasContinuation = true
-	}
-	if lTrim := strings.TrimLeft(e.Message, " \t\""); strings.HasPrefix(lTrim, ">") {
-		e.IsContinuation = true
+	lTrim := strings.TrimLeft(e.Message, " \t\"")
+	for _, m := range continuationMarkers {
+		if strings.HasSuffix(rTrim, m) {
+			e.HasContinuation = true
+		}
+		if strings.HasPrefix(lTrim, m) {
+			e.IsContinuation = true
+		}
 	}
 	if m := partRe.FindStringSubmatch(rTrim); m != nil {
 		idx, _ := strconv.Atoi(m[1])

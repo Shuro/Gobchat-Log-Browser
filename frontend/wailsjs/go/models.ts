@@ -206,6 +206,7 @@ export namespace config {
 	    channel_filters: Record<string, boolean>;
 	    check_updates_on_start: boolean;
 	    setup_wizard_version: number;
+	    colors: Record<string, any>;
 	
 	    static createFrom(source: any = {}) {
 	        return new Config(source);
@@ -223,6 +224,7 @@ export namespace config {
 	        this.channel_filters = source["channel_filters"];
 	        this.check_updates_on_start = source["check_updates_on_start"];
 	        this.setup_wizard_version = source["setup_wizard_version"];
+	        this.colors = source["colors"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {

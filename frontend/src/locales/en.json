@@ -8,9 +8,10 @@
     "rescan": "Rescan",
     "scanning": "Scanning…",
     "noLogs": "No logs found. Add a directory in Settings or check the Gobchat log folder.",
-    "filterPlayers": "Filter by player…",
+    "filterPlayers": "Filter by player/tags…",
     "clearFilter": "Clear",
-    "noFilterMatches": "No logs match the player filter."
+    "noFilterMatches": "No logs match the filter.",
+    "filterByTag": "Filter by this tag"
   },
   "viewer": {
     "messages": "{count} messages",
@@ -27,7 +28,8 @@
     "noEntries": "No entries match the filter.",
     "reassembling": "Reassembling…",
     "noThreads": "No threads match the filter.",
-    "parts": "{count} parts"
+    "parts": "{count} parts",
+    "hideRealm": "Hide realm names"
   },
   "search": {
     "scopeAll": "All logs",
@@ -47,6 +49,9 @@
   },
   "settings": {
     "title": "Settings",
+    "tabGeneral": "General",
+    "tabDesign": "Design",
+    "tabRoleplay": "Roleplay",
     "logDirs": "Log directories",
     "autoDetect": "Auto-detect the Gobchat log folder",
     "noDirs": "No extra directories. Auto-detect covers the default location.",
@@ -60,8 +65,17 @@
     "rpCharactersHint": "Pinned to the top of the player filter.",
     "rpCharacterNotFound": "not found in any log",
     "rpCharactersPlaceholder": "Type to search names…",
-    "mentions": "Highlight my names (mentions)",
-    "mentionsPlaceholder": "One name per line…",
+    "highlighter": "Highlighter",
+    "highlighterPlaceholder": "Names, comma-separated…",
+    "colors": "Colors",
+    "resetDefault": "Reset to default",
+    "colorText": "Text",
+    "colorBackground": "Background",
+    "preview": "Preview",
+    "previewSpeech": "\"Hello there,\"",
+    "previewEmote": "*waves slowly*",
+    "previewOoc": "((afk 5min))",
+    "previewMention": "Max Mustermiqote",
     "markers": "Roleplay markers",
     "markersHint": "Delimiters used to detect speech, emotes and OOC text. Defaults match Gobchat; add your own as needed.",
     "speech": "Speech",

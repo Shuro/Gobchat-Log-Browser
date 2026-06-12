@@ -35,8 +35,10 @@ var tokenGroup = map[string]string{
 	"time":       `(?P<time>\S+)`,
 	"time-short": `(?P<time>\S+)`,
 	"time-full":  `(?P<time>\S+)`,
-	"sender":     `(?P<sender>.+?)`,
-	"sender-cha": `(?P<sender>.+?)`,
+	// Sender may be empty: the game writes system lines (e.g. the Error
+	// channel) with no sender at all ("Error [..] : message").
+	"sender":     `(?P<sender>.*?)`,
+	"sender-cha": `(?P<sender>.*?)`,
 	"message":    `(?P<message>.*)`,
 }
 

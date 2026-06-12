@@ -27,7 +27,7 @@ export const useConfigStore = defineStore('config', () => {
     loading.value = true
     try {
       cfg.value = await GetConfig()
-      applyTheme(cfg.value.theme)
+      applyTheme(cfg.value.theme, cfg.value.colors)
       await applyLocale(cfg.value.language)
     } finally {
       loading.value = false
@@ -39,7 +39,7 @@ export const useConfigStore = defineStore('config', () => {
     saving.value = true
     try {
       await SaveConfig(cfg.value)
-      applyTheme(cfg.value.theme)
+      applyTheme(cfg.value.theme, cfg.value.colors)
       await applyLocale(cfg.value.language)
       const logs = useLogsStore()
       await logs.refreshList()

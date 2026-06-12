@@ -16,6 +16,10 @@ function baseName(path: string): string {
   return parts[parts.length - 1] ?? path
 }
 
+// One entry in the overview filter; type-aware so tag names may collide with
+// player names without ambiguity. The "#" shown on tags is display-only.
+export type FilterSelection = { type: 'player' | 'tag'; value: string }
+
 // The logs store owns the overview list, the currently opened log (raw entries
 // or the optional in-memory reassembled threads), and that log's tags/note.
 export const useLogsStore = defineStore('logs', () => {
@@ -51,6 +55,10 @@ export const useLogsStore = defineStore('logs', () => {
     localStorage.setItem('find.filterMode', mode)
     localStorage.setItem('find.messageOnly', msgOnly ? '1' : '0')
   })
+  // When true, "[Realm]" suffixes are hidden in both viewer modes (display
+  // only; the underlying entries keep the full sender).
+  const hideRealm = ref(localStorage.getItem('view.hideRealm') === '1')
+  watch(hideRealm, (v) => localStorage.setItem('view.hideRealm', v ? '1' : '0'))
   // 0-based position within matchIndexes for Enter/Shift+Enter navigation.
   const currentMatch = ref(0)
 
@@ -62,9 +70,11 @@ export const useLogsStore = defineStore('logs', () => {
     summaries.value.find((s) => s.file_path === selectedPath.value) ?? null,
   )
 
-  // Player filter over the overview list: logs must contain ALL selected
-  // players (AND), so picking two names finds the scenes between them.
-  const selectedPlayers = ref<string[]>([])
+  // Player/tag filter over the overview list: logs must contain ALL selected
+  // players AND carry all selected tags, so picking two names finds the scenes
+  // between them. Selections are type-aware because a tag may share its name
+  // with a player.
+  const selectedFilters = ref<FilterSelection[]>([])
 
   const allPlayers = computed(() => {
     const set = new Set<string>()
@@ -72,26 +82,42 @@ export const useLogsStore = defineStore('logs', () => {
     return [...set].sort()
   })
 
+  // Distinct tags currently present on logs (allTagNames covers every tag ever
+  // saved and feeds the TagEditor datalist instead).
+  const allTags = computed(() => {
+    const set = new Set<string>()
+    for (const s of summaries.value) for (const t of s.tags ?? []) set.add(t)
+    return [...set].sort()
+  })
+
   const visibleSummaries = computed(() => {
-    if (selectedPlayers.value.length === 0) return summaries.value
+    if (selectedFilters.value.length === 0) return summaries.value
     return summaries.value.filter((s) =>
-      selectedPlayers.value.every((p) => s.participants?.includes(p)),
+      selectedFilters.value.every((f) =>
+        f.type === 'player' ? s.participants?.includes(f.value) : s.tags?.includes(f.value),
+      ),
     )
   })
 
-  function addPlayer(name: string) {
-    const p = name.trim()
-    if (p && !selectedPlayers.value.includes(p) && allPlayers.value.includes(p)) {
-      selectedPlayers.value.push(p)
-    }
+  function hasFilter(sel: FilterSelection): boolean {
+    return selectedFilters.value.some((f) => f.type === sel.type && f.value === sel.value)
   }
 
-  function removePlayer(name: string) {
-    selectedPlayers.value = selectedPlayers.value.filter((p) => p !== name)
+  function addFilter(sel: FilterSelection) {
+    const value = sel.value.trim()
+    if (!value || hasFilter({ ...sel, value })) return
+    const known = sel.type === 'player' ? allPlayers.value : allTags.value
+    if (known.includes(value)) selectedFilters.value.push({ type: sel.type, value })
   }
 
-  function clearPlayers() {
-    selectedPlayers.value = []
+  function removeFilter(sel: FilterSelection) {
+    selectedFilters.value = selectedFilters.value.filter(
+      (f) => f.type !== sel.type || f.value !== sel.value,
+    )
+  }
+
+  function clearFilters() {
+    selectedFilters.value = []
   }
 
   function entryMatches(e: api.EntryDTO, q: string): boolean {
@@ -249,12 +275,13 @@ export const useLogsStore = defineStore('logs', () => {
   return {
     summaries,
     loadingList,
-    selectedPlayers,
+    selectedFilters,
     allPlayers,
+    allTags,
     visibleSummaries,
-    addPlayer,
-    removePlayer,
-    clearPlayers,
+    addFilter,
+    removeFilter,
+    clearFilters,
     selectedPath,
     selectedSummary,
     entries,
@@ -268,6 +295,7 @@ export const useLogsStore = defineStore('logs', () => {
     filterText,
     filterMode,
     messageOnly,
+    hideRealm,
     currentMatch,
     matchIndexes,
     nextMatch,

@@ -18,3 +18,15 @@ We will treat all such markers as **best-effort, low-confidence heuristics**. Th
 - **Positive:** Robust against the wide variety of real RP styling; rendering never blocked by a bad guess; users can tune markers to their community.
 - **Negative / risks:** Heuristic grouping (e.g. reassembly, ADR-0007) will sometimes be wrong; the UI must make Raw the faithful default and treat grouped/combined views as convenience.
 - **Follow-up:** Surface confidence in the UI where grouping is uncertain; keep marker config in Settings.
+
+## Update 2026-06-12: continuation marker inventory extended
+
+The hardcoded continuation marker set grew from `>` to `>`, `->`, `>>`, `+`
+(detection in `internal/parser`, trimming in `internal/reassemble`, both
+longest-match-first so trimming never strips a partial marker). Unlike the RP
+delimiter `MarkerSet`, continuation markers stay a **hardcoded heuristic list
+by design** — the "no convention is hardcoded" sentence above refers to the
+speech/emote/OOC delimiters only. False positives (e.g. a post legitimately
+ending in `+`) are accepted heuristic cost: they only affect the combined
+view, trimming removes exact whole markers only, and the Raw view remains
+faithful (ADR-0007).
