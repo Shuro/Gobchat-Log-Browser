@@ -1,0 +1,118 @@
+# Changelog
+
+All notable changes to Gobchat Log Browser are documented here.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.2.0] - 2026-06-28
+
+### Changed
+
+- Replaced the per-user NSIS installer and the notify-only update check with
+  [Velopack](https://docs.velopack.io/): the app now downloads and applies
+  updates in place and relaunches into the new version from the UI, with full +
+  delta packages so updates stay small (ADR-0013). The Settings → About update
+  control and the banner now offer a single "Update & restart" action with a
+  progress bar instead of opening the GitHub release page.
+- The installer now installs per-user to `%LOCALAPPDATA%\Gobchat-Log-Browser`
+  (previously `%LOCALAPPDATA%\GobchatLogBrowser`) and installs the Microsoft Edge
+  WebView2 runtime if it is missing.
+- Release assets are now `Gobchat-Log-Browser-win-Setup.exe` and
+  `Gobchat-Log-Browser-win-Portable.zip` (plus full/delta `.nupkg` and
+  `releases.win.json` for the update feed).
+
+### Added
+
+- "GobchatEx Dark" theme — a third theme option alongside Dark and Light, tuned
+  to GobchatEx's FFXIV-modern palette (selectable in the setup wizard and
+  Settings).
+- One-shot first-run migration that silently uninstalls a leftover legacy NSIS
+  install on Windows. User data in `%APPDATA%\GobchatLogBrowser` (tags, notes,
+  settings, metadata cache) is preserved untouched.
+
+### Removed
+
+- The notify-only GitHub-API update checker (`internal/update`) and the NSIS
+  installer finish-page update opt-in seed; the update opt-in is now asked only
+  in the first-run wizard.
+
+## [0.1.4] - 2026-06-12
+
+### Fixed
+
+- Register the per-user install in Windows "Installed apps" so it can be
+  uninstalled from Settings.
+
+### Changed
+
+- Trimmed the README feature list (dropped the realm toggle, shortened the
+  update-check note).
+
+## [0.1.3] - 2026-06-12
+
+### Added
+
+- Viewer channel filter.
+
+### Changed
+
+- Search result polish and tag autosave.
+- Release notes are now generated from program-affecting commit subjects.
+
+### Fixed
+
+- Live-update reliability fixes.
+
+## [0.1.2] - 2026-06-12
+
+### Added
+
+- Settings tabs with custom highlight colors.
+- Player and tag filters for the log list.
+- More roleplay continuation markers.
+
+### Fixed
+
+- Log display fixes.
+
+## [0.1.1] - 2026-06-11
+
+### Added
+
+- Opt-in update check with an About section and first-run wizard versioning
+  (ADR-0012).
+- AI-generated mock log folder for screenshots and examples.
+
+## [0.1.0] - 2026-06-11
+
+Initial public release.
+
+### Added
+
+- Log overview listing all logs with date, participants, message count, and
+  duration.
+- Gobchat CCLv1/FCLv1 log parsing with sender split (status symbol / name /
+  realm) and heuristic multi-part/continuation detection; unparseable lines
+  surface as raw text rather than being dropped.
+- Configurable roleplay highlighting for dialogue, emotes, and out-of-character
+  text.
+- Raw and reassembled views — in-memory stitching of interrupted multi-part
+  messages with per-post start/end times; log files are never modified.
+- Full-text search across all logs plus find-in-log with match navigation and
+  scrollbar match ticks.
+- Player and `#tag` filtering with your own roleplay characters pinned to the top.
+- Tags and notes stored as JSON sidecars, never inside the log files.
+- Live updates while Gobchat writes new logs (fsnotify watcher).
+- Persistent metadata index for fast startup on large log collections.
+- First-run setup wizard, dark/light themes, and English/German UI.
+- Per-user NSIS installer and portable zip; tag-triggered release pipeline
+  (ADR-0011).
+
+[Unreleased]: https://github.com/Shuro/Gobchat-Log-Browser/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/Shuro/Gobchat-Log-Browser/compare/v0.1.4...v0.2.0
+[0.1.4]: https://github.com/Shuro/Gobchat-Log-Browser/compare/v0.1.3...v0.1.4
+[0.1.3]: https://github.com/Shuro/Gobchat-Log-Browser/compare/v0.1.2...v0.1.3
+[0.1.2]: https://github.com/Shuro/Gobchat-Log-Browser/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/Shuro/Gobchat-Log-Browser/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/Shuro/Gobchat-Log-Browser/releases/tag/v0.1.0
