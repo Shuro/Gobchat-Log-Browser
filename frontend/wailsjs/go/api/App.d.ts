@@ -6,6 +6,8 @@ import {tags} from '../models';
 
 export function CheckForUpdate():Promise<api.UpdateCheckResult>;
 
+export function DownloadAndApplyUpdate():Promise<void>;
+
 export function GetAllTagNames():Promise<Array<string>>;
 
 export function GetConfig():Promise<config.Config>;

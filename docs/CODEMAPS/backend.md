@@ -10,7 +10,8 @@ serializes each method's args/return to JSON and generates TS bindings
 
 ```
 GetVersion()                       → version.Version
-CheckForUpdate()                   → update.ParseVersion / NewClient.LatestRelease / IsNewer
+CheckForUpdate()                   → velopackupd.Check (dev → "dev"; else UpdateManager)
+DownloadAndApplyUpdate()           → velopackupd.DownloadAndApply(emit update:progress) → wruntime.Quit
 GetConfig()                        → cfg (RLock)
 SaveConfig(cfg)                    → config.Save → (lang) i18n.New → (dirs) store.ScanAll + startWatcher
 ScanLogs()                         → store.ScanAll(effectiveDirs) → GetLogList
@@ -19,14 +20,15 @@ GetLogEntries(path)                → store.GetEntries → parser.Parse → toE
 GetLogThreads(path)                → store.GetEntries → reassemble.Reassemble → highlight.Tokenize
 Search(text,path,channels,sender)  → store.GetEntries(ensure) → index.Query(pool=1000) → post-filter → cap=200
 GetTags(file) / SetTags / GetAllTagNames → tags.TagStore
-GetSetupState()                    → config.Gobchat*Dir / ConsumeInstallerDefaults → needsSetup()
+GetSetupState()                    → config.Gobchat*Dir → needsSetup()
 PickDirectory()                    → wails OpenDirectoryDialog
 GetLocaleMessages()                → i18n.Localizer.Messages
-Startup(ctx) / Shutdown(ctx)       → Wails lifecycle (load, scan goroutine, watcher)
+Startup(ctx) / Shutdown(ctx)       → Wails lifecycle (load, scan goroutine, watcher,
+                                     migrate.CleanLegacyNSISInstall goroutine)
 ```
 
 Emitted events: `logs:scanned`, `log:new` (LogSummary), `log:updated` (path),
-`log:removed` (path).
+`log:removed` (path), `update:progress` (uint percent).
 
 ## Package map (`internal/`)
 
@@ -50,10 +52,12 @@ logstore/     store.go     LogStore: ScanAll, List, GetEntries(lazy+cache), Refr
 tags/         tags.go      TagStore: filename-keyed JSON sidecars (FileTags{Tags,Note})
 config/       config.go    Config + Load/Save (atomic JSON); SetupWizardCurrentVersion=2
               paths.go     platform paths (AppDataDir, ConfigFilePath, GobchatDefaultLogDir…)
-              installerdefaults.go  one-shot installer seed (ADR-0012)
 i18n/         i18n.go      embedded en/de localizer: New(lang), T(key), Messages()
 version/      version.go   Version (ldflags at release; "dev" locally)
-update/       check.go     GitHub latest-release client; semver.go ParseVersion/IsNewer (ADR-0012)
+velopackupd/  updater.go   Check / DownloadAndApply(progress) over GitHub releases feed;
+                           not-installed → "dev" (ADR-0013)
+migrate/      nsis_windows.go  one-shot detect + silent uninstall of legacy NSIS install;
+                           nsis_other.go no-op stub (ADR-0013)
 ```
 
 ## Concurrency
@@ -69,7 +73,7 @@ update/       check.go     GitHub latest-release client; semver.go ParseVersion/
 ```
 api/app.go (orchestrator, ~650 lines)   api/dto.go (wire contract)
 internal/parser/parser.go               internal/logstore/store.go
-main.go (wails.Run, embeds frontend/dist, webview2 data → app dir ADR-0010)
+main.go (velopack.Run first, wails.Run, embeds frontend/dist, webview2 data → app dir ADR-0010)
 ```
 
 ## Commands

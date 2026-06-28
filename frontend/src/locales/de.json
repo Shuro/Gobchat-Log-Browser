@@ -100,13 +100,14 @@
     "checking": "Suche…",
     "upToDate": "Du bist auf dem neuesten Stand.",
     "updateAvailable": "Version {version} ist verfügbar.",
-    "openRelease": "Release-Seite öffnen",
     "updateError": "Update-Prüfung fehlgeschlagen.",
     "devBuild": "Entwicklungs-Build — Update-Prüfung übersprungen."
   },
   "update": {
     "available": "Version {version} verfügbar",
-    "open": "Release ansehen",
+    "install": "Aktualisieren & neu starten",
+    "downloading": "Update wird heruntergeladen… {percent} %",
+    "failed": "Update fehlgeschlagen. Bitte erneut versuchen.",
     "skip": "Diese Version überspringen",
     "dismiss": "Ausblenden"
   },

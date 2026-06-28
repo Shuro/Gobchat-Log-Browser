@@ -1,7 +1,13 @@
 # ADR-0012: Opt-in update check, setup wizard versioning, installer seed
 
-- **Status:** Accepted
+- **Status:** Partially superseded by ADR-0013
 - **Date:** 2026-06-11
+
+> **Superseded:** ADR-0013 replaces the notify-only check (`internal/update`,
+> GitHub-API/semver, "open release page") with Velopack in-app download/apply,
+> and removes the NSIS installer seed (no Velopack finish page — the update
+> opt-in is asked only in the wizard). Still in force: the
+> `check_updates_on_start` opt-in (default off) and setup-wizard versioning.
 
 ## Context
 

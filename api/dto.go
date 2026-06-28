@@ -57,20 +57,14 @@ type SetupState struct {
 	// WizardVersion is the version the wizard stamps into config on save, so
 	// Go stays the single source of the current wizard version.
 	WizardVersion int `json:"wizard_version"`
-	// Installer seed (docs/adr/0012): the Windows installer may leave a one-shot
-	// default for the update-check opt-in; InstallerCheckUpdates is only
-	// meaningful when InstallerSeedFound is true.
-	InstallerSeedFound    bool `json:"installer_seed_found"`
-	InstallerCheckUpdates bool `json:"installer_check_updates"`
 }
 
 // UpdateCheckResult is the outcome of a successful update check; network and
-// API failures are returned as an error (Promise rejection) instead.
+// updater failures are returned as an error (Promise rejection) instead.
 type UpdateCheckResult struct {
 	Status         string `json:"status"` // "dev" | "up_to_date" | "update_available"
 	CurrentVersion string `json:"current_version"`
 	LatestVersion  string `json:"latest_version"`
-	ReleaseURL     string `json:"release_url"`
 }
 
 // SearchResponse wraps the hits of one search; Truncated tells the frontend

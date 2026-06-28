@@ -100,13 +100,14 @@
     "checking": "Checking…",
     "upToDate": "You're up to date.",
     "updateAvailable": "Version {version} is available.",
-    "openRelease": "Open release page",
     "updateError": "Update check failed.",
     "devBuild": "Development build — update check skipped."
   },
   "update": {
     "available": "Version {version} available",
-    "open": "View release",
+    "install": "Update & restart",
+    "downloading": "Downloading update… {percent}%",
+    "failed": "Update failed. Please try again.",
     "skip": "Skip this version",
     "dismiss": "Dismiss"
   },

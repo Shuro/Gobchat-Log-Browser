@@ -57,8 +57,8 @@
 
 Download the latest version from the [releases page](https://github.com/Shuro/Gobchat-Log-Browser/releases/latest):
 
-- **Installer (recommended):** `gobchat-log-browser-vX.Y.Z-windows-amd64-installer.exe` — installs per-user to `%LOCALAPPDATA%\GobchatLogBrowser` (no admin rights needed) and creates Start Menu and desktop shortcuts. Uninstalling via Windows Settings → Apps keeps your tags, notes, and settings.
-- **Portable:** `gobchat-log-browser-vX.Y.Z-windows-amd64-portable.zip` — unzip anywhere and run the exe directly.
+- **Installer (recommended):** `Gobchat-Log-Browser-win-Setup.exe` — installs per-user to `%LOCALAPPDATA%\Gobchat-Log-Browser` (no admin rights needed), creates Start Menu and desktop shortcuts, and installs the Microsoft Edge WebView2 runtime if it is missing. Once installed, the app updates itself in place (opt-in, from the Settings → About section). Uninstalling via Windows Settings → Apps keeps your tags, notes, and settings.
+- **Portable:** `Gobchat-Log-Browser-win-Portable.zip` — unzip anywhere and run the exe directly (no auto-update).
 
 > **SmartScreen warning:** the binaries are not code-signed, so Windows may show *"Windows protected your PC"* on first run. Click **More info → Run anyway**. This is expected for small open-source tools without a (paid) signing certificate.
 

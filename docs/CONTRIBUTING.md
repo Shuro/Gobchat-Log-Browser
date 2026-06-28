@@ -100,8 +100,10 @@ storage behavior.
 ## Releases
 
 Releases are automated: push a semver tag `vX.Y.Z` and CI
-([.github/workflows/release.yml](../.github/workflows/release.yml)) builds the
-Windows installer + portable zip and publishes the GitHub release (ADR-0011).
+([.github/workflows/release.yml](../.github/workflows/release.yml)) runs `vpk pack`
+(Velopack) and publishes the GitHub release with `Setup.exe`, full/delta `.nupkg`
+packages, a portable zip, and `releases.win.json` — the feed the in-app updater
+reads (ADR-0013).
 
 ## License
 

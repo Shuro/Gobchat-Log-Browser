@@ -30,11 +30,8 @@ onMounted(async () => {
     if (props.state.config_exists) {
       useDetected.value = config.cfg.auto_detect_appdata && props.state.default_log_dir_exists
     }
-    // The installer's one-shot seed wins on first run; otherwise the existing
-    // config value pre-fills (false for true first runs).
-    checkUpdates.value = props.state.installer_seed_found
-      ? props.state.installer_check_updates
-      : config.cfg.check_updates_on_start
+    // Pre-fill from the existing config value (false for true first runs).
+    checkUpdates.value = config.cfg.check_updates_on_start
   }
 })
 

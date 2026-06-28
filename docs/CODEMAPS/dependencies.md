@@ -5,16 +5,18 @@
 Single static binary. Go backend + Vue frontend embedded via `//go:embed
 all:frontend/dist`. No runtime services or databases.
 
-## Backend (go.mod, Go 1.23)
+## Backend (go.mod, Go 1.24.3)
 
 ```
-github.com/wailsapp/wails/v2   v2.12.0   desktop shell, bindings, events, dialogs
-github.com/fsnotify/fsnotify   v1.10.1   live log-directory watching (logstore/watcher.go)
+github.com/wailsapp/wails/v2     v2.12.0   desktop shell, bindings, events, dialogs
+github.com/fsnotify/fsnotify     v1.10.1   live log-directory watching (logstore/watcher.go)
+github.com/quaadgras/velopack-go v0.0.1358 install + in-app update (cgo; needs -lntdll, ADR-0013)
+golang.org/x/sys                 v0.30.0   Windows registry read for NSIS migration (migrate/)
 ```
 
 Everything else in go.mod is an indirect dependency pulled in by Wails (echo,
-go-webview2, gorilla/websocket, golang.org/x/{crypto,net,sys,text}, …). The app
-imports only the two direct modules above plus the Go stdlib.
+go-webview2, gorilla/websocket, golang.org/x/{crypto,net,text}, …). The app
+imports only the four direct modules above plus the Go stdlib.
 
 ## Frontend (package.json)
 
@@ -31,7 +33,8 @@ vite ^3 · @vitejs/plugin-vue ^3 · typescript ^5.9 · vue-tsc ^2.2  (build: vue
 ## External services
 
 ```
-GitHub Releases API   opt-in update check only (internal/update, ADR-0012).
+GitHub Releases       opt-in Velopack update feed (internal/velopackupd, ADR-0013):
+                      releases/latest/download → releases.win.json + nupkgs.
                       Default off; dev builds skip the network call entirely.
                       No telemetry, no other network access.
 ```
@@ -50,5 +53,6 @@ internal/i18n         embedded en/de locale data (go:embed)
 
 ```
 Go 1.23 · Wails v2 CLI (wails dev|build|generate module) · Node/npm (frontend)
-Release: push semver tag vX.Y.Z → CI builds installer + portable zip (ADR-0011)
+Windows builds: CGO_LDFLAGS=-lntdll (velopack-go links Velopack Rust libs, ADR-0013)
+Release: push semver tag vX.Y.Z → CI runs vpk pack → Setup.exe + nupkgs + portable (ADR-0013)
 ```

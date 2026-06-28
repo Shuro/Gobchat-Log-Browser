@@ -145,8 +145,6 @@ export namespace api {
 	    default_log_dir: string;
 	    default_log_dir_exists: boolean;
 	    wizard_version: number;
-	    installer_seed_found: boolean;
-	    installer_check_updates: boolean;
 	
 	    static createFrom(source: any = {}) {
 	        return new SetupState(source);
@@ -159,8 +157,6 @@ export namespace api {
 	        this.default_log_dir = source["default_log_dir"];
 	        this.default_log_dir_exists = source["default_log_dir_exists"];
 	        this.wizard_version = source["wizard_version"];
-	        this.installer_seed_found = source["installer_seed_found"];
-	        this.installer_check_updates = source["installer_check_updates"];
 	    }
 	}
 	export class ThreadDTO {
@@ -209,7 +205,6 @@ export namespace api {
 	    status: string;
 	    current_version: string;
 	    latest_version: string;
-	    release_url: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new UpdateCheckResult(source);
@@ -220,7 +215,6 @@ export namespace api {
 	        this.status = source["status"];
 	        this.current_version = source["current_version"];
 	        this.latest_version = source["latest_version"];
-	        this.release_url = source["release_url"];
 	    }
 	}
 

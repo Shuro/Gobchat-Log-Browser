@@ -1,6 +1,9 @@
 # Wails / frontend build output
 build/bin
 
+# Velopack packaging output (vpk pack --outputDir)
+release_out/
+
 # Go build temp dir (GOTMPDIR) — kept inside the project because the
 # antivirus exclusion covers the project folder but not %TEMP%
 .gotmp/

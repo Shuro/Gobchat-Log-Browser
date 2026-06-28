@@ -25,8 +25,12 @@ $env:Path = [Environment]::GetEnvironmentVariable("Path","Machine")+";"+[Environ
 - Frontend type-check + build: `cd frontend && npm run build` (runs `vue-tsc --noEmit && vite build`)
 - Regenerate frontend bindings: `wails generate module` — required after changing
   `config.Config` or any DTO, and it must run *before* the frontend type-check.
-- Release: push a semver tag `vX.Y.Z` → CI builds the installer + portable zip and
-  publishes the GitHub release (`.github/workflows/release.yml`, ADR-0011).
+- **Windows builds need `CGO_LDFLAGS=-lntdll`** (env var, not a `#cgo` directive) — the
+  velopack-go binding links Velopack's Rust libs which reference ntdll. Set it for every
+  `wails dev` / `wails build` / `go test` / `go build` on Windows (ADR-0013).
+- Release: push a semver tag `vX.Y.Z` → CI runs `vpk pack` (Velopack) and publishes the
+  GitHub release with `Setup.exe`, full/delta `.nupkg`, a portable zip, and
+  `releases.win.json` (`.github/workflows/release.yml`, ADR-0013).
 
 ## Hard constraints
 
@@ -72,9 +76,12 @@ Wails bindings.
 - `internal/config` — config + atomic load/save + platform paths
 - `internal/i18n` — embedded backend localizer (en/de)
 - `internal/version` — app version, injected at release time via ldflags (dev builds: "dev")
-- `internal/update` — opt-in GitHub release check + semver compare (ADR-0012)
+- `internal/velopackupd` — Velopack-backed update check + in-app download/apply, gated on the
+  `check_updates_on_start` opt-in; no-op on `dev` builds (ADR-0013)
+- `internal/migrate` — one-shot first-run detect + silent uninstall of the legacy NSIS
+  install (Windows only; no-op stub elsewhere) (ADR-0013)
 - `api/` — the Wails binding layer (`App` + DTOs in `dto.go`); the only surface the frontend
-  calls. Emits `logs:scanned` and `log:new|updated|removed` events.
+  calls. Emits `logs:scanned`, `log:new|updated|removed`, and `update:progress` events.
 - `frontend/src` — Vue 3 + Pinia + vue-i18n + vue-virtual-scroller; backend locale strings
   are merged at runtime via `GetLocaleMessages`.
 

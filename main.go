@@ -8,6 +8,7 @@ import (
 	"gobchat-log-browser/internal/config"
 	"gobchat-log-browser/internal/version"
 
+	"github.com/quaadgras/velopack-go/velopack"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
@@ -18,6 +19,13 @@ import (
 var assets embed.FS
 
 func main() {
+	// Velopack must service install/update/uninstall hooks before any UI is
+	// created; in a normal launch this returns and we continue to Wails. Safe to
+	// call unconditionally (no-op when not launched by the Velopack updater).
+	velopack.Run(velopack.App{
+		AutoApplyOnStartup: true,
+	})
+
 	app := api.NewApp()
 
 	// Keep WebView2 browser data inside our own app dir instead of the Wails

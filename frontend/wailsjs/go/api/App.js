@@ -6,6 +6,10 @@ export function CheckForUpdate() {
   return window['go']['api']['App']['CheckForUpdate']();
 }
 
+export function DownloadAndApplyUpdate() {
+  return window['go']['api']['App']['DownloadAndApplyUpdate']();
+}
+
 export function GetAllTagNames() {
   return window['go']['api']['App']['GetAllTagNames']();
 }

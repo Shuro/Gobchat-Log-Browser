@@ -1,7 +1,12 @@
 # ADR-0011: Versioning, release pipeline, and update-check groundwork
 
-- **Status:** Accepted
+- **Status:** Partially superseded by ADR-0013
 - **Date:** 2026-06-11
+
+> **Superseded:** ADR-0013 replaces the NSIS installer and the planned
+> installer-asset auto-update path with Velopack. Still in force: semver tags as
+> the single source of truth, the `-ldflags` version injection (`dev` for local
+> builds), and `wails.json` `productVersion` patched from the tag in CI.
 
 ## Context
 

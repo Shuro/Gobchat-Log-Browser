@@ -57,8 +57,8 @@ Der **Gobchat Log Browser** ist eine Desktop-App, die aus diesen Log-Dateien ein
 
 Lade die aktuelle Version von der [Releases-Seite](https://github.com/Shuro/Gobchat-Log-Browser/releases/latest) herunter:
 
-- **Installer (empfohlen):** `gobchat-log-browser-vX.Y.Z-windows-amd64-installer.exe` — installiert pro Benutzer nach `%LOCALAPPDATA%\GobchatLogBrowser` (keine Admin-Rechte nötig) und legt Startmenü- und Desktop-Verknüpfungen an. Beim Deinstallieren über Windows-Einstellungen → Apps bleiben Tags, Notizen und Einstellungen erhalten.
-- **Portabel:** `gobchat-log-browser-vX.Y.Z-windows-amd64-portable.zip` — irgendwo entpacken und die Exe direkt starten.
+- **Installer (empfohlen):** `Gobchat-Log-Browser-win-Setup.exe` — installiert pro Benutzer nach `%LOCALAPPDATA%\Gobchat-Log-Browser` (keine Admin-Rechte nötig), legt Startmenü- und Desktop-Verknüpfungen an und installiert die Microsoft-Edge-WebView2-Runtime, falls sie fehlt. Nach der Installation aktualisiert sich die App selbst (optional, über den Bereich Einstellungen → Über). Beim Deinstallieren über Windows-Einstellungen → Apps bleiben Tags, Notizen und Einstellungen erhalten.
+- **Portabel:** `Gobchat-Log-Browser-win-Portable.zip` — irgendwo entpacken und die Exe direkt starten (keine automatischen Updates).
 
 > **SmartScreen-Warnung:** Die Binärdateien sind nicht code-signiert, daher zeigt Windows beim ersten Start eventuell *„Der Computer wurde durch Windows geschützt"* an. Klicke auf **Weitere Informationen → Trotzdem ausführen**. Das ist bei kleinen Open-Source-Tools ohne (kostenpflichtiges) Signaturzertifikat normal.
 

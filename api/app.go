@@ -16,11 +16,12 @@ import (
 	"gobchat-log-browser/internal/highlight"
 	"gobchat-log-browser/internal/i18n"
 	"gobchat-log-browser/internal/logstore"
+	"gobchat-log-browser/internal/migrate"
 	"gobchat-log-browser/internal/parser"
 	"gobchat-log-browser/internal/reassemble"
 	"gobchat-log-browser/internal/search"
 	"gobchat-log-browser/internal/tags"
-	"gobchat-log-browser/internal/update"
+	"gobchat-log-browser/internal/velopackupd"
 	"gobchat-log-browser/internal/version"
 
 	wruntime "github.com/wailsapp/wails/v2/pkg/runtime"
@@ -34,10 +35,11 @@ type App struct {
 	cfg        config.Config
 	configPath string
 
-	index *search.Index
-	store *logstore.LogStore
-	tags  *tags.TagStore
-	loc   *i18n.Localizer
+	index   *search.Index
+	store   *logstore.LogStore
+	tags    *tags.TagStore
+	loc     *i18n.Localizer
+	updater *velopackupd.Updater
 
 	// watcherMu serializes startWatcher's close-old/create-new swap; a.mu still
 	// guards the watcher field itself (Shutdown only closes, so it needs a.mu only).
@@ -54,10 +56,19 @@ type App struct {
 // before it is re-parsed and the frontend is notified.
 const fileChangeDebounce = 300 * time.Millisecond
 
+// updateFeedURL is the Velopack HTTP feed. GitHub's "releases/latest/download"
+// path always resolves to the latest stable release's assets, so a single
+// static base URL serves releases.<channel>.json and the update packages
+// without baking a release tag into the URL (docs/adr/0013).
+const updateFeedURL = "https://github.com/Shuro/Gobchat-Log-Browser/releases/latest/download"
+
 // NewApp allocates the App. Heavy initialisation happens in Startup, once Wails
 // provides the context.
 func NewApp() *App {
-	return &App{debounce: map[string]*time.Timer{}}
+	return &App{
+		debounce: map[string]*time.Timer{},
+		updater:  velopackupd.New(updateFeedURL),
+	}
 }
 
 // GetVersion returns the app version ("dev" for local builds).
@@ -65,37 +76,45 @@ func (a *App) GetVersion() string {
 	return version.Version
 }
 
-// CheckForUpdate queries GitHub for the latest release and compares it against
-// the running version (docs/adr/0012). Dev builds skip the network call
-// entirely. Callers decide how to surface errors: the startup check swallows
-// them (offline must be silent), the manual Settings check displays them.
+// CheckForUpdate asks Velopack whether a newer release is available on the feed
+// (docs/adr/0013). Dev/portable builds that can't self-update report status
+// "dev" so the UI stays quiet. Callers decide how to surface errors: the startup
+// check swallows them (offline must be silent), the manual Settings check shows
+// them.
 func (a *App) CheckForUpdate() (UpdateCheckResult, error) {
 	res := UpdateCheckResult{CurrentVersion: version.Version}
-	if _, ok := update.ParseVersion(version.Version); !ok {
-		res.Status = "dev"
+	if version.Version == "dev" {
+		res.Status = string(velopackupd.StatusNotInstalled)
 		return res, nil
 	}
-
-	ctx := a.ctx
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	rel, err := update.NewClient().LatestRelease(ctx)
+	r, err := a.updater.Check()
+	res.CurrentVersion = pick(r.Current, version.Version)
+	res.LatestVersion = r.Latest
+	res.Status = string(r.Status)
 	if err != nil {
 		return res, fmt.Errorf("%s: %w", a.t("error.updateCheckFailed"), err)
 	}
-	if _, ok := update.ParseVersion(rel.TagName); !ok {
-		return res, fmt.Errorf("%s: unexpected tag %q", a.t("error.updateCheckFailed"), rel.TagName)
-	}
-
-	res.LatestVersion = strings.TrimPrefix(strings.TrimSpace(rel.TagName), "v")
-	res.ReleaseURL = rel.HTMLURL
-	if update.IsNewer(rel.TagName, version.Version) {
-		res.Status = "update_available"
-	} else {
-		res.Status = "up_to_date"
-	}
 	return res, nil
+}
+
+// DownloadAndApplyUpdate downloads the pending update, emitting "update:progress"
+// (0–100) as it goes, then quits the app so the Velopack updater can apply it
+// and relaunch. Returns an error (surfaced in the UI) if the download fails.
+func (a *App) DownloadAndApplyUpdate() error {
+	err := a.updater.DownloadAndApply(func(percent uint) {
+		if a.ctx != nil {
+			wruntime.EventsEmit(a.ctx, "update:progress", percent)
+		}
+	})
+	if err != nil {
+		return fmt.Errorf("%s: %w", a.t("error.updateCheckFailed"), err)
+	}
+	// The updater is now waiting for us to exit; quit cleanly so OnShutdown runs
+	// and the updater can swap in the new version and restart us.
+	if a.ctx != nil {
+		wruntime.Quit(a.ctx)
+	}
+	return nil
 }
 
 // Startup is wired to Wails OnStartup. It loads config and tags, builds the
@@ -155,6 +174,10 @@ func (a *App) Startup(ctx context.Context) {
 			})
 		}()
 	}
+
+	// One-shot: a fresh Velopack install lands beside any old NSIS install, which
+	// Velopack can't auto-migrate, so silently remove the legacy copy (docs/adr/0013).
+	go func() { _ = migrate.CleanLegacyNSISInstall() }()
 
 	// The initial scan can touch hundreds of files; run it off the startup path
 	// so the window appears immediately, then tell the frontend to refresh.
@@ -361,8 +384,7 @@ func (a *App) GetAllTagNames() []string { return a.tags.AllTags() }
 // needed when no config file exists yet, when there is no usable log directory
 // (the detected default does not exist and no configured directory exists), or
 // when the wizard gained new content since the user last completed it. It also
-// returns the detected default directory to prefill the wizard and consumes
-// the installer's one-shot update-check seed, if present.
+// returns the detected default directory to prefill the wizard.
 func (a *App) GetSetupState() SetupState {
 	a.mu.RLock()
 	cfgPath := a.configPath
@@ -391,13 +413,6 @@ func (a *App) GetSetupState() SetupState {
 	}
 
 	st.WizardVersion = config.SetupWizardCurrentVersion
-	if seedPath, err := config.InstallerDefaultsFilePath(); err == nil {
-		if def, found := config.ConsumeInstallerDefaults(seedPath); found {
-			st.InstallerSeedFound = true
-			st.InstallerCheckUpdates = def.CheckUpdatesOnStart
-		}
-	}
-
 	st.NeedsSetup = needsSetup(st.ConfigExists, st.DefaultLogDirExists, anyConfigured, cfg.SetupWizardVersion)
 	return st
 }
@@ -627,6 +642,14 @@ func baseName(path string) string {
 		return path[i+1:]
 	}
 	return path
+}
+
+// pick returns a if non-empty, else b.
+func pick(a, b string) string {
+	if a != "" {
+		return a
+	}
+	return b
 }
 
 func toSet(items []string) map[string]struct{} {

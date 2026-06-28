@@ -12,12 +12,12 @@ strictly read-only (ADR-0007). App data lives in `%APPDATA%\GobchatLogBrowser`
 config.json          config.Config         user settings (config/config.go)
 <tags file>          tags.TagStore         filename-keyed { tags[], note } (ADR-0005)
 index.json           logstore.MetaCache    metadata cache for fast startup (ADR-0009)
-<installer seed>     installer defaults     one-shot update-check opt-in (ADR-0012)
+nsis-migrated        migrate marker        one-shot NSIS-cleanup guard (ADR-0013)
 webview2/            WebView2 user data     kept in app dir, not %APPDATA%\<exe> (ADR-0010)
 ```
 
 Paths resolved in `config/paths.go` (AppDataDir, ConfigFilePath, TagsFilePath,
-IndexFilePath, InstallerDefaultsFilePath, GobchatDefaultLogDir).
+IndexFilePath, GobchatDefaultLogDir).
 
 ## Schemas
 

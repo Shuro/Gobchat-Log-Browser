@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
-import { BrowserOpenURL, EventsOn } from '../wailsjs/runtime/runtime'
-import { CheckForUpdate, GetSetupState } from '../wailsjs/go/api/App'
+import { EventsOn } from '../wailsjs/runtime/runtime'
+import { CheckForUpdate, DownloadAndApplyUpdate, GetSetupState } from '../wailsjs/go/api/App'
 import type { api } from '../wailsjs/go/models'
 import { useLogsStore } from './stores/logs'
 import { useSearchStore } from './stores/search'
@@ -21,6 +21,9 @@ const config = useConfigStore()
 const showSettings = ref(false)
 const setupState = ref<api.SetupState | null>(null)
 const updateNotice = ref<api.UpdateCheckResult | null>(null)
+const updating = ref(false)
+const updateProgress = ref(0)
+const updateFailed = ref(false)
 const unsubscribers: Array<() => void> = []
 
 // Startup update check: opt-in, and silent on any failure — being offline must
@@ -44,6 +47,19 @@ function skipUpdate() {
   }
 }
 
+// Download the pending update and restart into it. On success the backend quits
+// the app (Velopack applies the update and relaunches us), so this call never
+// resolves visibly; a rejection means the download failed and we surface it.
+function startUpdate() {
+  updating.value = true
+  updateFailed.value = false
+  updateProgress.value = 0
+  DownloadAndApplyUpdate().catch(() => {
+    updating.value = false
+    updateFailed.value = true
+  })
+}
+
 onMounted(async () => {
   // Load config first so the theme is applied immediately.
   await config.load()
@@ -57,6 +73,7 @@ onMounted(async () => {
 
   // Subscribe before the first fetch so a fast initial scan that finishes in
   // between cannot slip through unnoticed…
+  unsubscribers.push(EventsOn('update:progress', (p: number) => (updateProgress.value = p)))
   unsubscribers.push(EventsOn('logs:scanned', () => store.refreshList()))
   unsubscribers.push(EventsOn('log:new', () => store.refreshList()))
   unsubscribers.push(EventsOn('log:removed', () => store.refreshList()))
@@ -96,13 +113,18 @@ function onSetupDone() {
       </button>
     </header>
     <div v-if="updateNotice" class="update-banner">
-      <span>{{ t('update.available', { version: updateNotice.latest_version }) }}</span>
-      <button class="ghost" @click="BrowserOpenURL(updateNotice.release_url)">
-        {{ t('update.open') }}
-      </button>
-      <button class="ghost" @click="skipUpdate">{{ t('update.skip') }}</button>
-      <span class="spacer"></span>
-      <button class="ghost" :title="t('update.dismiss')" @click="updateNotice = null">✕</button>
+      <template v-if="updating">
+        <span>{{ t('update.downloading', { percent: updateProgress }) }}</span>
+        <progress class="update-progress" :value="updateProgress" max="100"></progress>
+      </template>
+      <template v-else>
+        <span>{{ t('update.available', { version: updateNotice.latest_version }) }}</span>
+        <button class="ghost" @click="startUpdate">{{ t('update.install') }}</button>
+        <button class="ghost" @click="skipUpdate">{{ t('update.skip') }}</button>
+        <span v-if="updateFailed" class="muted">{{ t('update.failed') }}</span>
+        <span class="spacer"></span>
+        <button class="ghost" :title="t('update.dismiss')" @click="updateNotice = null">✕</button>
+      </template>
     </div>
     <main class="app-body">
       <LogList />

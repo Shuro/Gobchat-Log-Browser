@@ -1,10 +1,15 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useConfigStore } from '../stores/config'
 import { useLogsStore } from '../stores/logs'
-import { CheckForUpdate, GetVersion, PickDirectory } from '../../wailsjs/go/api/App'
-import { BrowserOpenURL } from '../../wailsjs/runtime/runtime'
+import {
+  CheckForUpdate,
+  DownloadAndApplyUpdate,
+  GetVersion,
+  PickDirectory,
+} from '../../wailsjs/go/api/App'
+import { BrowserOpenURL, EventsOn } from '../../wailsjs/runtime/runtime'
 import { config } from '../../wailsjs/go/models'
 import {
   DEFAULT_COLORS,
@@ -158,7 +163,8 @@ function removeDirectory(dir: string) {
 // Manual update check: acts immediately, independent of the draft/save flow.
 const updateState = ref<'idle' | 'checking' | 'uptodate' | 'available' | 'dev' | 'error'>('idle')
 const latestVersion = ref('')
-const releaseUrl = ref('')
+const updating = ref(false)
+const updateProgress = ref(0)
 
 async function checkForUpdates() {
   updateState.value = 'checking'
@@ -166,7 +172,6 @@ async function checkForUpdates() {
     const res = await CheckForUpdate()
     if (res.status === 'update_available') {
       latestVersion.value = res.latest_version
-      releaseUrl.value = res.release_url
       updateState.value = 'available'
     } else if (res.status === 'dev') {
       updateState.value = 'dev'
@@ -177,6 +182,21 @@ async function checkForUpdates() {
     updateState.value = 'error'
   }
 }
+
+// Download and apply the update in place. On success the backend quits the app
+// so Velopack can swap in the new version and relaunch; a rejection means the
+// download failed.
+function startUpdate() {
+  updating.value = true
+  updateProgress.value = 0
+  DownloadAndApplyUpdate().catch(() => {
+    updating.value = false
+    updateState.value = 'error'
+  })
+}
+
+const unsubProgress = EventsOn('update:progress', (p: number) => (updateProgress.value = p))
+onUnmounted(() => unsubProgress())
 
 async function save() {
   if (!draft.value) return
@@ -268,10 +288,14 @@ async function save() {
             <p v-else-if="updateState === 'dev'" class="muted">{{ t('settings.devBuild') }}</p>
             <p v-else-if="updateState === 'error'" class="muted">{{ t('settings.updateError') }}</p>
             <p v-else-if="updateState === 'available'">
-              {{ t('settings.updateAvailable', { version: latestVersion }) }}
-              <button class="ghost" @click="BrowserOpenURL(releaseUrl)">
-                {{ t('settings.openRelease') }}
-              </button>
+              <template v-if="updating">
+                {{ t('update.downloading', { percent: updateProgress }) }}
+                <progress class="update-progress" :value="updateProgress" max="100"></progress>
+              </template>
+              <template v-else>
+                {{ t('settings.updateAvailable', { version: latestVersion }) }}
+                <button class="ghost" @click="startUpdate">{{ t('update.install') }}</button>
+              </template>
             </p>
           </section>
         </div>
