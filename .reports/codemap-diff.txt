@@ -1,0 +1,40 @@
+Codemap generation report
+Generated: 2026-06-19  |  Last verified: 2026-06-28
+Project: Gobchat Log Browser (Go + Wails v2 / Vue 3 + Pinia)
+
+== STATUS ==
+Re-run on 2026-06-28: NO CHANGES. Codemaps remain accurate; nothing overwritten.
+Drift since baseline (2026-06-19): 0%.
+
+Reason: no commits and no source changes since the codemaps were generated.
+- Latest commit: cb51ad9 (2026-06-12), predates the 2026-06-19 codemaps.
+- git log --since="2026-06-19" -- api/ internal/ frontend/src/ main.go go.mod
+  frontend/package.json  →  empty.
+- Working tree has no source edits (only .gitignore, a docs screenshot, and the
+  untracked .reports/ + docs/CODEMAPS/ outputs themselves).
+
+== CURRENT INVENTORY (verified) ==
+Go:        34 files (api/, internal/{parser,highlight,reassemble,search,
+           logstore,tags,config,i18n,version,update}, main.go) — matches baseline.
+Frontend:  ~20 files (frontend/src: App.vue, 11 components, 3 stores,
+           composables, utils, main.ts, i18n.ts) — matches baseline.
+Manifests: go.mod (Go 1.23), frontend/package.json — unchanged.
+
+== FILES ADDED / REMOVED / MODIFIED ==
+None.
+
+== NEW DEPENDENCIES DETECTED ==
+None.
+
+== ARCHITECTURE CHANGES ==
+None (no new api.App methods, DTOs, internal packages, events, or stores).
+
+== STALENESS ==
+Codemap content is 9 days old but still correct (under the 90-day warning
+threshold). Generation date left at 2026-06-19 because content was not
+regenerated — only re-verified.
+
+== REGEN TRIGGERS ==
+Re-run /ecc:update-codemaps after: changing api.App methods or DTOs (also run
+`wails generate module`), adding internal packages, adding direct deps, or
+changing the persistence/log format. ADRs remain source-of-truth for rationale.
