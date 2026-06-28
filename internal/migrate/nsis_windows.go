@@ -14,7 +14,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gobchat-log-browser/internal/config"
+	"gobchat-log-browser/internal/version"
 
 	"golang.org/x/sys/windows/registry"
 )
@@ -23,44 +23,41 @@ import (
 // (UNINST_KEY_NAME = CompanyName+ProductName = "Shuro"+"Gobchat Log Browser").
 const legacyUninstallKey = `Software\Microsoft\Windows\CurrentVersion\Uninstall\ShuroGobchat Log Browser`
 
-// migratedMarker is the one-shot sentinel so this runs at most once per machine.
-const migratedMarker = "nsis-migrated"
-
-// CleanLegacyNSISInstall removes a leftover NSIS install, once. It is safe to
-// call on every startup: it no-ops after success and when no legacy install is
-// present. Errors are returned for logging; callers may ignore them.
+// CleanLegacyNSISInstall removes a leftover NSIS install. It is safe to call on
+// every startup: the legacy uninstall key's presence is the only state it acts
+// on, so it no-ops once that key is gone and self-heals if a legacy copy is
+// reinstalled. Errors are returned for logging; callers may ignore them.
 //
-// The success marker is written only after the legacy install is confirmed
-// gone, so a transient failure (e.g. the uninstaller is briefly blocked)
-// retries on the next launch instead of orphaning the old install forever.
+// There is deliberately no persistent "done" marker: an earlier design latched
+// completion in a sentinel file under the version-shared app-data dir, which a
+// dev run (or a launch that preceded the legacy install) could write
+// prematurely and thereby disable the migration forever (docs/adr/0013).
 func CleanLegacyNSISInstall() error {
-	appData, err := config.AppDataDir()
-	if err != nil {
-		return fmt.Errorf("locate app data dir: %w", err)
-	}
-	marker := filepath.Join(appData, migratedMarker)
-	if _, err := os.Stat(marker); err == nil {
-		return nil // already handled
+	// Dev builds run from a temp/build dir, not the install dir, so isCurrentInstall
+	// can't protect them — they must never silently uninstall the user's real,
+	// separately-installed copy. Only release builds perform the migration.
+	if version.Version == "dev" {
+		return nil
 	}
 
 	installLoc, quietUninstall, found := readLegacyUninstall()
 	if !found || quietUninstall == "" {
-		return writeMarker(marker) // nothing to remove — done for good
+		return nil // no legacy install present — nothing to do
 	}
 	if isCurrentInstall(installLoc) {
-		return writeMarker(marker) // never uninstall ourselves
+		return nil // never uninstall ourselves
 	}
 
 	if err := runLegacyUninstaller(quietUninstall, installLoc); err != nil {
-		return fmt.Errorf("run legacy uninstaller: %w", err) // no marker → retry
+		return fmt.Errorf("run legacy uninstaller: %w", err) // retry next launch
 	}
 
 	// The NSIS uninstaller deletes its own HKCU key as it runs; its absence is
-	// the signal that removal completed. Only then is the migration done.
+	// the signal that removal completed.
 	if _, _, stillPresent := readLegacyUninstall(); stillPresent {
 		return fmt.Errorf("legacy uninstall did not complete; will retry next launch")
 	}
-	return writeMarker(marker)
+	return nil
 }
 
 // runLegacyUninstaller invokes the NSIS uninstaller synchronously and removes
@@ -130,15 +127,4 @@ func isCurrentInstall(installLoc string) bool {
 	exe = strings.ToLower(filepath.Clean(exe))
 	loc := strings.ToLower(filepath.Clean(installLoc))
 	return strings.HasPrefix(exe, loc)
-}
-
-// writeMarker records that migration completed so it never runs again.
-func writeMarker(marker string) error {
-	if err := os.MkdirAll(filepath.Dir(marker), 0o755); err != nil {
-		return fmt.Errorf("create app data dir: %w", err)
-	}
-	if err := os.WriteFile(marker, []byte("Velopack migration: legacy NSIS install handled.\n"), 0o644); err != nil {
-		return fmt.Errorf("write migration marker: %w", err)
-	}
-	return nil
 }

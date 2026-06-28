@@ -63,16 +63,23 @@ step and no more "open the release page" flow.
 
 **NSIS migration.** Velopack only auto-migrates from Squirrel, not NSIS, so an existing
 NSIS install would otherwise sit side-by-side in the old folder. `internal/migrate`
-(`nsis_windows.go`, no-op stub elsewhere) does a **one-shot detect + silent uninstall** on
-first run: it reads HKCU
+(`nsis_windows.go`, no-op stub elsewhere) does a **detect + silent uninstall** on every
+startup of a **release** build: it reads HKCU
 `…\Uninstall\ShuroGobchat Log Browser`, verifies the recorded `InstallLocation` is not the
 current Velopack dir, and runs the legacy uninstaller. The uninstaller is launched
 **directly** (not through `cmd /C`, whose quote handling mangled the already-quoted
 `QuietUninstallString`) and **synchronously** via NSIS's `_?=<dir>` in-place flag, so we wait
-for it to finish instead of firing and forgetting. The `nsis-migrated` marker in
-`%APPDATA%\GobchatLogBrowser` is written **only after the removal is confirmed** (the NSIS
-key is gone); a transient failure leaves the marker unset so the next launch retries rather
-than orphaning the old install. User data in `%APPDATA%` is untouched.
+for it to finish instead of firing and forgetting. User data in `%APPDATA%` is untouched.
+
+The presence of the legacy HKCU key is the **only** state the migration acts on: it
+no-ops once the key is gone and self-heals if a legacy copy is later reinstalled. An
+earlier design (shipped in v0.2.0) latched completion in an `nsis-migrated` sentinel file
+under the version-shared `%APPDATA%\GobchatLogBrowser`. That marker could be written
+**prematurely** — by a `wails dev` run, or by any launch that preceded the legacy install —
+and then permanently disabled the migration, leaving the old install behind. Two fixes
+(v0.2.1): the marker was removed entirely, and the migration is now **gated to release
+builds** (`version.Version != "dev"`) so dev runs, which execute from a temp/build dir that
+`isCurrentInstall` cannot recognise, never silently uninstall the developer's real copy.
 
 **Build requirement.** Velopack's static Rust libs reference ntdll's `Nt*` syscalls and the
 binding omits the link flag, so every Go/Wails build on Windows must set
