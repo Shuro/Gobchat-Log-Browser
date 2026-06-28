@@ -14,7 +14,7 @@ builds should work but are currently untested).
 
 | Tool | Version | Notes |
 |------|---------|-------|
-| [Go](https://go.dev/dl/) | 1.23+ | backend |
+| [Go](https://go.dev/dl/) | 1.24+ | backend (go.mod toolchain: 1.24.3) |
 | [Node.js](https://nodejs.org/) + npm | current LTS | frontend build |
 | [Wails CLI v2](https://wails.io/docs/gettingstarted/installation) | v2 | `go install github.com/wailsapp/wails/v2/cmd/wails@latest` |
 | [WebView2 runtime](https://developer.microsoft.com/microsoft-edge/webview2/) | — | runtime only (preinstalled on Win 11 / most Win 10) |
@@ -38,6 +38,11 @@ builds should work but are currently untested).
 | `gofmt -l .` | List unformatted Go files (should print nothing) |
 | `cd frontend && npm run build` | Frontend type-check + build (`vue-tsc --noEmit && vite build`) |
 | `cd frontend && npm run dev` | Vite dev server (normally driven by `wails dev`) |
+
+> **Windows build note:** set `CGO_LDFLAGS=-lntdll` (an env var, not a `#cgo`
+> directive) for every `wails dev` / `wails build` / `go test` / `go build` on
+> Windows — the velopack-go binding links Velopack's Rust libs, which reference
+> ntdll's `Nt*` syscalls (ADR-0013).
 
 <!-- END AUTO-GENERATED -->
 

@@ -52,7 +52,7 @@ internal/i18n         embedded en/de locale data (go:embed)
 ## Toolchain (not on PATH in fresh shells — prefix per CLAUDE.md)
 
 ```
-Go 1.23 · Wails v2 CLI (wails dev|build|generate module) · Node/npm (frontend)
+Go 1.24 · Wails v2 CLI (wails dev|build|generate module) · Node/npm (frontend)
 Windows builds: CGO_LDFLAGS=-lntdll (velopack-go links Velopack Rust libs, ADR-0013)
 Release: push semver tag vX.Y.Z → CI runs vpk pack → Setup.exe + nupkgs + portable (ADR-0013)
 ```
