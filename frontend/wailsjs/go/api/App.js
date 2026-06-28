@@ -6,6 +6,10 @@ export function CheckForUpdate() {
   return window['go']['api']['App']['CheckForUpdate']();
 }
 
+export function DetectedLogDirs() {
+  return window['go']['api']['App']['DetectedLogDirs']();
+}
+
 export function DownloadAndApplyUpdate() {
   return window['go']['api']['App']['DownloadAndApplyUpdate']();
 }

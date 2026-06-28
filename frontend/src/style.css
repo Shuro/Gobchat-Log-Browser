@@ -1,5 +1,5 @@
-/* Dark theme + Gobchat-like roleplay highlighting. Colors are CSS variables so
-   they can be themed/configured later. */
+/* Blue (default) theme + Gobchat-like roleplay highlighting. Colors are CSS
+   variables so they can be themed/configured later. */
 :root {
   --bg: #1b2636;
   --bg-panel: #202c40;
@@ -373,6 +373,18 @@ button.ghost {
   flex: 1 1 auto;
   font-size: 12px;
   word-break: break-all;
+}
+.dir-list li.detected .dir-path {
+  color: var(--text-muted);
+}
+.dir-badge {
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  white-space: nowrap;
 }
 .mentions {
   width: 100%;

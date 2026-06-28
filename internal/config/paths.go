@@ -78,3 +78,25 @@ func GobchatDefaultLogDir() (string, error) {
 	}
 	return filepath.Join(home, ".local", "share", "Gobchat", "log"), nil
 }
+
+// GobchatExDefaultLogDir returns the default log output directory of GobchatEx,
+// a fork of Gobchat (ADR-0015). Like GobchatDefaultLogDir it is detected at
+// runtime and not stored in config. GobchatEx keeps Gobchat's "log" subfolder
+// name under its own GobchatEx app-data folder.
+func GobchatExDefaultLogDir() (string, error) {
+	if runtime.GOOS == "windows" {
+		base := os.Getenv("APPDATA")
+		if base == "" {
+			var err error
+			if base, err = os.UserConfigDir(); err != nil {
+				return "", err
+			}
+		}
+		return filepath.Join(base, "GobchatEx", "log"), nil
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, ".local", "share", "GobchatEx", "log"), nil
+}

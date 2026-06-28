@@ -5,6 +5,7 @@ import { useConfigStore } from '../stores/config'
 import { useLogsStore } from '../stores/logs'
 import {
   CheckForUpdate,
+  DetectedLogDirs,
   DownloadAndApplyUpdate,
   GetVersion,
   PickDirectory,
@@ -31,12 +32,18 @@ const draft = ref<config.Config | null>(null)
 
 const appVersion = ref('')
 
+// Read-only paths that auto-detect currently covers (Gobchat / GobchatEx),
+// shown so the user can see what the toggle actually scans. Empty if neither
+// default folder exists.
+const detectedDirs = ref<string[]>([])
+
 // Sections are split across tabs; v-show keeps tab-local state (update-check
 // result, autocomplete input) alive while switching.
 const activeTab = ref<'general' | 'design' | 'roleplay'>('general')
 
 onMounted(async () => {
   appVersion.value = await GetVersion()
+  detectedDirs.value = await DetectedLogDirs()
   if (!configStore.cfg) await configStore.load()
   if (configStore.cfg) {
     draft.value = config.Config.createFrom(JSON.parse(JSON.stringify(configStore.cfg)))
@@ -102,7 +109,7 @@ function colorLabel(cat: ColorCategory): string {
 // Preview base colors per theme; must match --bg-panel / --color-plain in
 // style.css. Inline values so previewing the non-active theme looks right.
 const previewBase: Record<ThemeName, { bg: string; fg: string }> = {
-  dark: { bg: '#202c40', fg: '#d7deea' },
+  blue: { bg: '#202c40', fg: '#d7deea' },
   light: { bg: '#e9edf4', fg: '#1b2330' },
   'dark-gobchat-ex': { bg: '#171a20', fg: '#e8eaee' },
 }
@@ -256,11 +263,23 @@ async function save() {
               {{ t('settings.autoDetect') }}
             </label>
             <ul class="dir-list">
+              <template v-if="draft.auto_detect_appdata">
+                <li v-for="d in detectedDirs" :key="'auto:' + d" class="detected">
+                  <span class="dir-path">{{ d }}</span>
+                  <span class="dir-badge">{{ t('settings.detected') }}</span>
+                </li>
+              </template>
               <li v-for="d in draft.log_directories" :key="d">
                 <span class="dir-path">{{ d }}</span>
                 <button class="ghost" @click="removeDirectory(d)">{{ t('settings.remove') }}</button>
               </li>
-              <li v-if="draft.log_directories.length === 0" class="muted">
+              <li
+                v-if="
+                  draft.log_directories.length === 0 &&
+                  !(draft.auto_detect_appdata && detectedDirs.length)
+                "
+                class="muted"
+              >
                 {{ t('settings.noDirs') }}
               </li>
             </ul>
@@ -306,7 +325,7 @@ async function save() {
           <section>
             <h3>{{ t('settings.theme') }}</h3>
             <select v-model="draft.theme">
-              <option value="dark">{{ t('settings.dark') }}</option>
+              <option value="blue">{{ t('settings.blue') }}</option>
               <option value="light">{{ t('settings.light') }}</option>
               <option value="dark-gobchat-ex">{{ t('settings.darkGobchatEx') }}</option>
             </select>

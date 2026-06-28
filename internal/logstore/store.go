@@ -26,6 +26,11 @@ type LogStore struct {
 	// parseMu serializes parse+index of uncached files so two concurrent
 	// GetEntries calls for the same path cannot both parse and double-index it.
 	parseMu sync.Mutex
+
+	// hashMu guards hashCache, a memoized content-hash store used by List's
+	// duplicate dedup (ADR-0015) keyed by file path and validated by mtime+size.
+	hashMu    sync.Mutex
+	hashCache map[string]hashEntry
 }
 
 // New creates a LogStore that indexes parsed entries into idx (idx may be nil to
@@ -37,6 +42,7 @@ func New(idx *search.Index, metaCache *MetaCache) *LogStore {
 		cache:     map[string]*parser.ParsedLog{},
 		index:     idx,
 		metaCache: metaCache,
+		hashCache: map[string]hashEntry{},
 	}
 }
 
@@ -47,12 +53,15 @@ func (s *LogStore) ScanAll(dirs []string) error {
 	fresh := map[string]*LogMeta{}
 	watch := []string{}
 	seenWatch := map[string]struct{}{}
-	for _, dir := range dirs {
+	for i, dir := range dirs {
 		metas, wdirs, err := ScanDirectory(dir, s.metaCache)
 		if err != nil {
 			return err
 		}
 		for _, m := range metas {
+			// Earlier dirs win identical-content dedup ties; effectiveDirs lists
+			// GobchatEx before Gobchat so its copies are preferred (ADR-0015).
+			m.SourcePriority = i
 			fresh[m.FilePath] = m
 		}
 		for _, w := range wdirs {
@@ -76,6 +85,16 @@ func (s *LogStore) ScanAll(dirs []string) error {
 	}
 	s.mu.Unlock()
 
+	// Drop memoized content hashes for files that disappeared, mirroring the
+	// parse-cache cleanup above so hashCache cannot grow unbounded (ADR-0015).
+	s.hashMu.Lock()
+	for path := range s.hashCache {
+		if _, ok := fresh[path]; !ok {
+			delete(s.hashCache, path)
+		}
+	}
+	s.hashMu.Unlock()
+
 	if s.metaCache != nil {
 		keep := map[string]struct{}{}
 		for path := range fresh {
@@ -98,12 +117,24 @@ func (s *LogStore) WatchDirs() []string {
 	return out
 }
 
-// List returns all known metadata, newest first.
+// List returns all known metadata, newest first, with duplicate log files
+// collapsed to a single entry per filename (ADR-0015). Deduplication happens on
+// this read boundary — not in ScanAll — so any path updated by the watcher via
+// Refresh is re-evaluated on the next List, and because Search builds its pool
+// from List the hidden duplicates are never listed, opened, or indexed.
 func (s *LogStore) List() []LogMeta {
 	s.mu.RLock()
-	defer s.mu.RUnlock()
-	out := make([]LogMeta, 0, len(s.metas))
+	metas := make([]*LogMeta, 0, len(s.metas))
 	for _, m := range s.metas {
+		metas = append(metas, m)
+	}
+	s.mu.RUnlock()
+	// Dedup (which may hash files for identical-content comparison) runs outside
+	// the lock; the *LogMeta values it reads are never mutated in place after
+	// insertion, so copying them here is safe.
+	winners := s.dedupe(metas)
+	out := make([]LogMeta, 0, len(winners))
+	for _, m := range winners {
 		out = append(out, *m)
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].LogDate.After(out[j].LogDate) })
@@ -182,6 +213,12 @@ func (s *LogStore) Refresh(path string) error {
 	}
 
 	s.mu.Lock()
+	if old, ok := s.metas[path]; ok {
+		// Preserve the scan-root priority assigned in ScanAll; ExtractMeta does
+		// not know it, and resetting it to 0 can flip duplicate-log dedup ties
+		// away from the preferred source (ADR-0015).
+		meta.SourcePriority = old.SourcePriority
+	}
 	s.metas[path] = meta
 	_, wasCached := s.cache[path]
 	delete(s.cache, path)

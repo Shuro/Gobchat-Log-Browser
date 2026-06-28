@@ -17,19 +17,20 @@ webview2/            WebView2 user data     kept in app dir, not %APPDATA%\<exe>
 ```
 
 Paths resolved in `config/paths.go` (AppDataDir, ConfigFilePath, TagsFilePath,
-IndexFilePath, GobchatDefaultLogDir).
+IndexFilePath, GobchatDefaultLogDir, GobchatExDefaultLogDir).
 
 ## Schemas
 
 ```
 Config (config.json)
+  config_version           schema version (0 = pre-versioning; ADR-0014)
   log_directories[]        configured roots
-  auto_detect_appdata      also scan Gobchat default dir (runtime-detected)
+  auto_detect_appdata      also scan Gobchat + GobchatEx default dirs (runtime-detected; ADR-0015)
   language                 "en" | "de"
   mention_names[]          highlighted as mentions
   roleplay_characters[]    pinned in player filter
   markers                  MarkerSet{speech[],emote[],ooc[]} (open/close pairs)
-  theme                    "light" | "dark"
+  theme                    "light" | "blue" | "dark-gobchat-ex"
   channel_filters          map[channel]bool
   check_updates_on_start   opt-in (default false — never phone home w/o consent)
   setup_wizard_version     last completed wizard version (0 = pre-versioning)
@@ -64,9 +65,13 @@ Unparseable lines surface as `ChannelUnknown` with raw text — never dropped.
 
 ## "Migrations"
 
-No schema migrations. Forward-compat is handled at load time:
-- `config.Load` backfills empty marker sets with `DefaultMarkerSet`; missing
-  fields decode to zero values; missing file → defaults (not an error).
+Config carries an explicit `config_version` with a versioned migration runner
+(`runConfigMigrations`, ADR-0014); `CurrentConfigVersion` = 2 (`v0 → v1` no-op;
+`v1 → v2` renamed the "dark" theme to "blue", moving the value and its `colors`
+override key). Other forward-compat is still handled at load time:
+- `config.Load` decodes a missing `config_version` as 0 and migrates+stamps it;
+  backfills empty marker sets with `DefaultMarkerSet`; missing fields decode to
+  zero values; missing file → defaults (not an error).
 - `setup_wizard_version` < `SetupWizardCurrentVersion` (=2) re-shows the wizard
   with new content (history: 1=original, 2=update-check opt-in).
 - Corrupt tags file is renamed `.corrupt` and a fresh store starts at the

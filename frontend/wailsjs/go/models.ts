@@ -223,6 +223,7 @@ export namespace api {
 export namespace config {
 	
 	export class Config {
+	    config_version: number;
 	    log_directories: string[];
 	    auto_detect_appdata: boolean;
 	    language: string;
@@ -241,6 +242,7 @@ export namespace config {
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.config_version = source["config_version"];
 	        this.log_directories = source["log_directories"];
 	        this.auto_detect_appdata = source["auto_detect_appdata"];
 	        this.language = source["language"];

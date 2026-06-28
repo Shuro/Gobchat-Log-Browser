@@ -27,6 +27,13 @@ type LogMeta struct {
 	LastEntry    time.Time        `json:"last_entry"`
 	Duration     time.Duration    `json:"duration"`
 	SizeBytes    int64            `json:"size_bytes"`
+
+	// Transient fields used for duplicate-log dedup (ADR-0015). They are
+	// recomputed on every scan and never persisted (json:"-") or sent to the
+	// frontend: ModTime is the file's last-modified time, SourcePriority is the
+	// index of the scan root the file came from (lower = preferred on ties).
+	ModTime        time.Time `json:"-"`
+	SourcePriority int       `json:"-"`
 }
 
 var filenameDateRe = regexp.MustCompile(`(\d{4}-\d{2}-\d{2})[_ ](\d{2})-(\d{2})`)
@@ -94,6 +101,7 @@ func ScanDirectory(root string, cache *MetaCache) (metas []*LogMeta, watchDirs [
 		if infoErr == nil && cache != nil {
 			if m, ok := cache.Get(path, info.ModTime(), info.Size()); ok {
 				m.Folder = folder // root may differ from when cached; recompute
+				m.ModTime = info.ModTime()
 				metas = append(metas, m)
 				return nil
 			}
@@ -123,10 +131,14 @@ func ExtractMeta(path string) (*LogMeta, error) {
 		return nil, err
 	}
 	var size int64
+	var modTime time.Time
 	if info, statErr := os.Stat(path); statErr == nil {
 		size = info.Size()
+		modTime = info.ModTime()
 	}
-	return metaFromParsed(path, pl, size), nil
+	m := metaFromParsed(path, pl, size)
+	m.ModTime = modTime
+	return m, nil
 }
 
 func metaFromParsed(path string, pl *parser.ParsedLog, size int64) *LogMeta {

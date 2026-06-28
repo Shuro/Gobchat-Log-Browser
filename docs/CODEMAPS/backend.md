@@ -43,15 +43,18 @@ reassemble/   reassemble.go  Reassemble([]LogEntry) → []Thread; sender-keyed,
                          maxGap=15m; in-memory only (ADR-0007)
 search/       search.go  Index (inverted, RWMutex): AddEntries, Query(text,file,limit),
                          HasFile; tokenize = lowercased letter/digit runs, no stopwords
-logstore/     store.go     LogStore: ScanAll, List, GetEntries(lazy+cache), Refresh,
-                           Get, WatchDirs; feeds search.Index
+logstore/     store.go     LogStore: ScanAll, List(deduped), GetEntries(lazy+cache),
+                           Refresh, Get, WatchDirs; feeds search.Index
               scanner.go   ScanDirectory (recursive), LogMeta{counts, participants,
-                           channels, duration, folder}
+                           channels, duration, folder, +transient mtime/priority}
+              dedup.go     List-boundary duplicate-log dedup by filename (ADR-0015)
               watcher.go   Watch(dirs, cb) fsnotify → WatchEvent Created/Modified/Removed
               metacache.go MetaCache: persistent JSON index for fast startup (ADR-0009)
 tags/         tags.go      TagStore: filename-keyed JSON sidecars (FileTags{Tags,Note})
-config/       config.go    Config + Load/Save (atomic JSON); SetupWizardCurrentVersion=2
-              paths.go     platform paths (AppDataDir, ConfigFilePath, GobchatDefaultLogDir…)
+config/       config.go    Config + Load/Save (atomic JSON); SetupWizardCurrentVersion=2,
+                           CurrentConfigVersion=2 + migration runner (ADR-0014)
+              paths.go     platform paths (AppDataDir, ConfigFilePath,
+                           GobchatDefaultLogDir, GobchatExDefaultLogDir…)
 i18n/         i18n.go      embedded en/de localizer: New(lang), T(key), Messages()
 version/      version.go   Version (ldflags at release; "dev" locally)
 velopackupd/  updater.go   Check / DownloadAndApply(progress) over GitHub releases feed;

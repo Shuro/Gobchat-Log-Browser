@@ -397,11 +397,27 @@ func (a *App) GetSetupState() SetupState {
 			st.ConfigExists = true
 		}
 	}
-	if def, err := config.GobchatDefaultLogDir(); err == nil {
-		st.DefaultLogDir = def
-		if fi, statErr := os.Stat(def); statErr == nil && fi.IsDir() {
-			st.DefaultLogDirExists = true
-		}
+	// Detect both Gobchat and GobchatEx default dirs (ADR-0015). The wizard is
+	// "satisfied" if either exists, and prefills with whichever exists, preferring
+	// GobchatEx; if neither exists it falls back to the Gobchat path as the
+	// historical suggestion.
+	gobchatDir, gobErr := config.GobchatDefaultLogDir()
+	gobchatExDir, exErr := config.GobchatExDefaultLogDir()
+	isDir := func(p string) bool {
+		fi, err := os.Stat(p)
+		return err == nil && fi.IsDir()
+	}
+	switch {
+	case exErr == nil && isDir(gobchatExDir):
+		st.DefaultLogDir = gobchatExDir
+		st.DefaultLogDirExists = true
+	case gobErr == nil && isDir(gobchatDir):
+		st.DefaultLogDir = gobchatDir
+		st.DefaultLogDirExists = true
+	case gobErr == nil:
+		st.DefaultLogDir = gobchatDir
+	case exErr == nil:
+		st.DefaultLogDir = gobchatExDir
 	}
 
 	anyConfigured := false
@@ -424,6 +440,25 @@ func needsSetup(configExists, defaultDirExists, anyConfigured bool, savedWizardV
 	return !configExists ||
 		(!defaultDirExists && !anyConfigured) ||
 		savedWizardVersion < config.SetupWizardCurrentVersion
+}
+
+// DetectedLogDirs returns the auto-detected default log directories that
+// currently exist on disk — GobchatEx first, then Gobchat (ADR-0015). It is
+// independent of the auto_detect_appdata toggle so the settings UI can show
+// exactly which folders auto-detect covers. A non-existent default is omitted.
+func (a *App) DetectedLogDirs() []string {
+	isDir := func(p string) bool {
+		fi, err := os.Stat(p)
+		return err == nil && fi.IsDir()
+	}
+	var dirs []string
+	if d, err := config.GobchatExDefaultLogDir(); err == nil && isDir(d) {
+		dirs = append(dirs, d)
+	}
+	if d, err := config.GobchatDefaultLogDir(); err == nil && isDir(d) {
+		dirs = append(dirs, d)
+	}
+	return dirs
 }
 
 // --- Dialogs ---
@@ -484,6 +519,11 @@ func (a *App) effectiveDirs() []string {
 		dirs = append(dirs, d)
 	}
 	if cfg.AutoDetectAppData {
+		// GobchatEx first so it takes priority when the same log exists in both
+		// app-data dirs (dedup keeps the lowest-index source on ties; ADR-0015).
+		if d, err := config.GobchatExDefaultLogDir(); err == nil {
+			add(d)
+		}
 		if d, err := config.GobchatDefaultLogDir(); err == nil {
 			add(d)
 		}

@@ -13,7 +13,7 @@ const { t, locale } = useI18n()
 const config = useConfigStore()
 
 const language = ref('en')
-const theme = ref('dark')
+const theme = ref('dark-gobchat-ex')
 const useDetected = ref(props.state.default_log_dir_exists)
 const chosenDir = ref('')
 // Free text: nothing is scanned yet, so there is no name list to pick from.
@@ -24,15 +24,19 @@ onMounted(async () => {
   if (!config.cfg) await config.load()
   if (config.cfg) {
     language.value = config.cfg.language || 'en'
-    theme.value = config.cfg.theme || 'dark'
-    // Re-shown wizards (version bump) must respect an existing "auto-detect
-    // off" choice instead of silently re-enabling it.
+    // A re-shown wizard respects the saved theme and the existing "auto-detect
+    // off" choice; a true first run keeps the wizard defaults (GobchatEx Dark,
+    // auto-detect on) instead of silently overriding them.
     if (props.state.config_exists) {
+      theme.value = config.cfg.theme || 'dark-gobchat-ex'
       useDetected.value = config.cfg.auto_detect_appdata && props.state.default_log_dir_exists
     }
     // Pre-fill from the existing config value (false for true first runs).
     checkUpdates.value = config.cfg.check_updates_on_start
   }
+  // Apply the resolved theme so the live preview matches the dropdown on open
+  // (the watcher only fires on later changes).
+  applyTheme(theme.value)
 })
 
 // Live previews while choosing.
@@ -93,7 +97,7 @@ async function finish() {
       <section>
         <h3>{{ t('setup.theme') }}</h3>
         <select v-model="theme">
-          <option value="dark">{{ t('settings.dark') }}</option>
+          <option value="blue">{{ t('settings.blue') }}</option>
           <option value="light">{{ t('settings.light') }}</option>
           <option value="dark-gobchat-ex">{{ t('settings.darkGobchatEx') }}</option>
         </select>

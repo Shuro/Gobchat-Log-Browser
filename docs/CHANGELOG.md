@@ -5,6 +5,26 @@ All notable changes to Gobchat Log Browser are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Auto-detection of GobchatEx logs (`%APPDATA%\GobchatEx\log`) alongside Gobchat,
+  under the existing "auto-detect app data" option (ADR-0015).
+- Settings now lists the auto-detected log folders (Gobchat / GobchatEx) so you
+  can see exactly which locations auto-detect covers.
+- Config schema versioning (`config_version`) with a migration runner, so future
+  updates have a real upgrade path beyond zero-value backfill (ADR-0014).
+
+### Changed
+
+- When the same chat log exists in both the Gobchat and GobchatEx folders, the
+  overview and search now show a single entry: the GobchatEx copy when the two are
+  identical, otherwise the newer file (ADR-0015).
+- Renamed the "Dark" theme to "Blue" to match its actual color and distinguish it
+  from "GobchatEx Dark"; existing configs are migrated automatically (theme value
+  and saved color overrides) via the new config schema migration.
+
 ## [0.2.2] - 2026-06-28
 
 ### Fixed

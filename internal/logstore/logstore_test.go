@@ -1,6 +1,7 @@
 package logstore
 
 import (
+	"os"
 	"path/filepath"
 	"sync"
 	"testing"
@@ -106,6 +107,45 @@ func TestStoreConcurrentGetEntriesIndexesOnce(t *testing.T) {
 	}
 	if res := idx.Query("evening zzzmissing", path, 0); len(res) != 0 {
 		t.Fatalf("unsatisfiable AND returned %d results — file was double-indexed", len(res))
+	}
+}
+
+// A watcher Refresh of a duplicate must keep the SourcePriority that ScanAll
+// stamped from the scan-root order; ExtractMeta does not know it, and resetting
+// it to 0 would flip identical-content dedup ties away from the preferred
+// source (ADR-0015).
+func TestRefreshPreservesSourcePriority(t *testing.T) {
+	content, err := os.ReadFile(filepath.Join("testdata", "chatlog_2026-01-02_20-01.log"))
+	if err != nil {
+		t.Fatalf("read fixture: %v", err)
+	}
+	const name = "chatlog_2026-01-02_20-01.log"
+	exDir := filepath.Join(t.TempDir(), "GobchatEx")
+	gobDir := filepath.Join(t.TempDir(), "Gobchat")
+	for _, d := range []string{exDir, gobDir} {
+		if err := os.MkdirAll(d, 0o755); err != nil {
+			t.Fatalf("mkdir %s: %v", d, err)
+		}
+		if err := os.WriteFile(filepath.Join(d, name), content, 0o644); err != nil {
+			t.Fatalf("write %s: %v", d, err)
+		}
+	}
+
+	s := New(nil, nil)
+	// exDir scanned first → priority 0; gobDir → priority 1.
+	if err := s.ScanAll([]string{exDir, gobDir}); err != nil {
+		t.Fatalf("ScanAll: %v", err)
+	}
+	gobPath := filepath.Join(gobDir, name)
+	if m, ok := s.Get(gobPath); !ok || m.SourcePriority != 1 {
+		t.Fatalf("after ScanAll gob SourcePriority = %d (ok=%v), want 1", m.SourcePriority, ok)
+	}
+
+	if err := s.Refresh(gobPath); err != nil {
+		t.Fatalf("Refresh: %v", err)
+	}
+	if m, ok := s.Get(gobPath); !ok || m.SourcePriority != 1 {
+		t.Fatalf("after Refresh gob SourcePriority = %d (ok=%v), want 1 preserved", m.SourcePriority, ok)
 	}
 }
 

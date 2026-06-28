@@ -2,7 +2,7 @@
 // written as inline CSS custom properties on the document root, on top of the
 // theme defaults from style.css.
 
-export type ThemeName = 'dark' | 'light' | 'dark-gobchat-ex'
+export type ThemeName = 'blue' | 'light' | 'dark-gobchat-ex'
 export type ColorCategory = 'speech' | 'emote' | 'ooc' | 'mention-fg' | 'mention-bg'
 
 // Category → CSS custom property carrying it.
@@ -17,7 +17,7 @@ export const COLOR_VARS: Record<ColorCategory, string> = {
 // Theme default colors. Must match the --color-* values in style.css
 // (:root and :root[data-theme='light']).
 export const DEFAULT_COLORS: Record<ThemeName, Record<ColorCategory, string>> = {
-  dark: {
+  blue: {
     speech: '#ffffff',
     emote: '#f0c674',
     ooc: '#8c9bb5',
@@ -44,11 +44,13 @@ export const DEFAULT_COLORS: Record<ThemeName, Record<ColorCategory, string>> = 
 export function normalizeTheme(theme: string | undefined): ThemeName {
   if (theme === 'light') return 'light'
   if (theme === 'dark-gobchat-ex') return 'dark-gobchat-ex'
-  return 'dark'
+  // Catch-all also maps the pre-rename "dark" value to blue for any config that
+  // somehow reaches the frontend before the v1→v2 migration runs.
+  return 'blue'
 }
 
 // applyTheme sets the active theme on the document root; CSS variables under
-// :root and :root[data-theme="light"] do the rest. Defaults to dark. Color
+// :root and :root[data-theme="light"] do the rest. Defaults to blue. Color
 // overrides for the active theme are applied on top; missing entries fall
 // back to the stylesheet defaults (stale inline overrides are removed so a
 // theme switch or a reset takes effect).
