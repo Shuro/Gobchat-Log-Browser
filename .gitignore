@@ -38,3 +38,7 @@ Thumbs.db
 *.swp
 .idea/
 *.local
+
+# Claude Code project config (personal settings + vendored ECC rules)
+.claude/settings.local.json
+.claude/rules/ecc/
