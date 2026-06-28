@@ -19,7 +19,7 @@ type Config struct {
 	MentionNames        []string            `json:"mention_names"`
 	RoleplayCharacters  []string            `json:"roleplay_characters"` // pinned in the player filter
 	Markers             highlight.MarkerSet `json:"markers"`             // configurable RP delimiters
-	Theme               string              `json:"theme"`               // "light" | "dark"
+	Theme               string              `json:"theme"`               // "light" | "dark" | "dark-gobchat-ex"
 	ChannelFilters      map[string]bool     `json:"channel_filters"`
 	CheckUpdatesOnStart bool                `json:"check_updates_on_start"` // opt-in update check (docs/adr/0012)
 	SetupWizardVersion  int                 `json:"setup_wizard_version"`   // last completed wizard version; 0 = never/pre-versioning

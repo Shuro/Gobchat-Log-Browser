@@ -48,6 +48,40 @@
   --find-match-fg: #4a3c00;
 }
 
+/* GobchatEx "FFXIV Modern" dark theme: layered near-black surfaces with a
+   single warm-gold accent. Palette ported from GobchatEx's --gob-* tokens. */
+:root[data-theme='dark-gobchat-ex'] {
+  --bg: #0e1014;
+  --bg-panel: #171a20;
+  --bg-elevated: #1e2128;
+  --border: #2c303a;
+  --text: #e8eaee;
+  --text-muted: #a0a7b4;
+  --accent: #e0a44e;
+
+  --color-plain: #e8eaee;
+  --color-speech: #e8eaee;
+  --color-emote: #f0c074;
+  --color-ooc: #a0a7b4;
+  --color-mention-bg: rgba(224, 164, 78, 0.16);
+  --color-mention-fg: #f0c074;
+  --find-match-bg: rgba(224, 164, 78, 0.3);
+  --find-match-fg: #fff3d6;
+
+  --channel-say: #e8eaee;
+  --channel-emote: #f0c074;
+  --channel-yell: #d1de09;
+  --channel-shout: #ff8f6b;
+  --channel-party: #5bb7d6;
+  --channel-system: #6b7280;
+}
+
+/* The targeted-entry wash is a hardcoded blue; recolor it to gold here so it
+   reads on the gold accent rather than the default blue. */
+:root[data-theme='dark-gobchat-ex'] .entry.target {
+  background: rgba(224, 164, 78, 0.16);
+}
+
 @font-face {
   font-family: 'Nunito';
   font-style: normal;

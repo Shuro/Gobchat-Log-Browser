@@ -104,6 +104,7 @@ function colorLabel(cat: ColorCategory): string {
 const previewBase: Record<ThemeName, { bg: string; fg: string }> = {
   dark: { bg: '#202c40', fg: '#d7deea' },
   light: { bg: '#e9edf4', fg: '#1b2330' },
+  'dark-gobchat-ex': { bg: '#171a20', fg: '#e8eaee' },
 }
 
 // Roleplay characters are picked from the indexed player list via a small
@@ -307,6 +308,7 @@ async function save() {
             <select v-model="draft.theme">
               <option value="dark">{{ t('settings.dark') }}</option>
               <option value="light">{{ t('settings.light') }}</option>
+              <option value="dark-gobchat-ex">{{ t('settings.darkGobchatEx') }}</option>
             </select>
           </section>
 

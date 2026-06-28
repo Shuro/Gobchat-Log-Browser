@@ -95,6 +95,7 @@ async function finish() {
         <select v-model="theme">
           <option value="dark">{{ t('settings.dark') }}</option>
           <option value="light">{{ t('settings.light') }}</option>
+          <option value="dark-gobchat-ex">{{ t('settings.darkGobchatEx') }}</option>
         </select>
       </section>
 

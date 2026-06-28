@@ -2,7 +2,7 @@
 // written as inline CSS custom properties on the document root, on top of the
 // theme defaults from style.css.
 
-export type ThemeName = 'dark' | 'light'
+export type ThemeName = 'dark' | 'light' | 'dark-gobchat-ex'
 export type ColorCategory = 'speech' | 'emote' | 'ooc' | 'mention-fg' | 'mention-bg'
 
 // Category → CSS custom property carrying it.
@@ -31,10 +31,20 @@ export const DEFAULT_COLORS: Record<ThemeName, Record<ColorCategory, string>> = 
     'mention-fg': '#1d4d1d',
     'mention-bg': '#cdeccd',
   },
+  // GobchatEx "FFXIV Modern" dark palette: ink speech, warm gold emote/mention.
+  'dark-gobchat-ex': {
+    speech: '#e8eaee',
+    emote: '#f0c074',
+    ooc: '#a0a7b4',
+    'mention-fg': '#f0c074',
+    'mention-bg': 'rgba(224,164,78,.16)',
+  },
 }
 
 export function normalizeTheme(theme: string | undefined): ThemeName {
-  return theme === 'light' ? 'light' : 'dark'
+  if (theme === 'light') return 'light'
+  if (theme === 'dark-gobchat-ex') return 'dark-gobchat-ex'
+  return 'dark'
 }
 
 // applyTheme sets the active theme on the document root; CSS variables under
