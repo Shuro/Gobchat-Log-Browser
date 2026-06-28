@@ -1,6 +1,42 @@
 package migrate
 
-import "testing"
+import (
+	"os"
+	"path/filepath"
+	"testing"
+)
+
+// restoreShortcut exists because the NSIS uninstaller deletes the Start Menu
+// shortcut whose name Velopack reuses; we snapshot Velopack's copy and put it
+// back. The intent that matters: restore it only when it is actually gone, and
+// never overwrite a shortcut that is already there (which could be a newer one).
+func TestRestoreShortcut(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "Gobchat Log Browser.lnk")
+	const saved = "velopack-shortcut-bytes"
+
+	// Gone after the uninstall → the saved copy is restored.
+	restoreShortcut(path, []byte(saved))
+	if got, _ := os.ReadFile(path); string(got) != saved {
+		t.Fatalf("missing shortcut not restored: got %q, want %q", got, saved)
+	}
+
+	// Already present (e.g. a newer shortcut) → left untouched.
+	if err := os.WriteFile(path, []byte("newer-shortcut"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	restoreShortcut(path, []byte(saved))
+	if got, _ := os.ReadFile(path); string(got) != "newer-shortcut" {
+		t.Fatalf("present shortcut was clobbered: got %q", got)
+	}
+
+	// Nothing was saved (no Velopack shortcut existed) → nothing is created.
+	absent := filepath.Join(dir, "absent.lnk")
+	restoreShortcut(absent, nil)
+	if _, err := os.Stat(absent); !os.IsNotExist(err) {
+		t.Fatalf("restoreShortcut created a file from nil data")
+	}
+}
 
 // uninstallerExe must pull a clean path out of the registry's
 // QuietUninstallString. This matters because the previous implementation handed

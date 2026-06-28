@@ -48,9 +48,18 @@ func CleanLegacyNSISInstall() error {
 		return nil // never uninstall ourselves
 	}
 
+	// The NSIS uninstaller deletes "Gobchat Log Browser.lnk" from the Start Menu —
+	// the very name Velopack also uses (its --packTitle), so it removes Velopack's
+	// shortcut along with the legacy one. Snapshot Velopack's shortcut first so we
+	// can put it back verbatim (icon, AppUserModelID and all) after the uninstall.
+	shortcut := startMenuShortcut()
+	savedShortcut := readFileOrNil(shortcut)
+
 	if err := runLegacyUninstaller(quietUninstall, installLoc); err != nil {
 		return fmt.Errorf("run legacy uninstaller: %w", err) // retry next launch
 	}
+
+	restoreShortcut(shortcut, savedShortcut)
 
 	// The NSIS uninstaller deletes its own HKCU key as it runs; its absence is
 	// the signal that removal completed.
@@ -60,6 +69,43 @@ func CleanLegacyNSISInstall() error {
 	return nil
 }
 
+// startMenuShortcut is the per-user Start Menu entry that the legacy NSIS
+// installer and Velopack name identically — "Gobchat Log Browser.lnk", from
+// NSIS's product name and Velopack's --packTitle — which is why the NSIS
+// uninstaller removes Velopack's copy.
+func startMenuShortcut() string {
+	appData := os.Getenv("APPDATA")
+	if appData == "" {
+		return ""
+	}
+	return filepath.Join(appData, "Microsoft", "Windows", "Start Menu", "Programs", "Gobchat Log Browser.lnk")
+}
+
+// readFileOrNil returns a file's bytes, or nil if it is absent or unreadable.
+func readFileOrNil(path string) []byte {
+	if path == "" {
+		return nil
+	}
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return nil
+	}
+	return b
+}
+
+// restoreShortcut puts back a Start Menu shortcut the legacy uninstaller removed.
+// It restores only when the shortcut is actually gone, so it never clobbers a
+// newer one, and no-ops when there was nothing to save.
+func restoreShortcut(path string, data []byte) {
+	if path == "" || data == nil {
+		return
+	}
+	if _, err := os.Stat(path); err == nil {
+		return // still present — nothing to restore
+	}
+	_ = os.WriteFile(path, data, 0o644)
+}
+
 // runLegacyUninstaller invokes the NSIS uninstaller synchronously and removes
 // the leftovers it cannot delete itself.
 //
@@ -67,7 +113,8 @@ func CleanLegacyNSISInstall() error {
 // already-quoted QuietUninstallString). The `_?=<dir>` flag makes NSIS run
 // in-place rather than its default copy-to-temp-and-detach, so cmd.Run() truly
 // waits for the uninstall to finish — but in-place mode then cannot delete the
-// still-running uninstaller or its (now empty) directory, so we do.
+// still-running uninstaller or its directory, so we remove the whole leftover
+// install folder ourselves once the uninstaller has exited.
 func runLegacyUninstaller(quietUninstall, installLoc string) error {
 	exe := uninstallerExe(quietUninstall)
 	if exe == "" {
@@ -77,8 +124,7 @@ func runLegacyUninstaller(quietUninstall, installLoc string) error {
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("uninstaller %q failed: %w", exe, err)
 	}
-	_ = os.Remove(exe)
-	_ = os.Remove(installLoc)
+	_ = os.RemoveAll(installLoc)
 	return nil
 }
 

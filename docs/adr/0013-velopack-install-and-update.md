@@ -81,6 +81,15 @@ and then permanently disabled the migration, leaving the old install behind. Two
 builds** (`version.Version != "dev"`) so dev runs, which execute from a temp/build dir that
 `isCurrentInstall` cannot recognise, never silently uninstall the developer's real copy.
 
+The NSIS uninstaller deletes the Start Menu shortcut `Gobchat Log Browser.lnk` — the
+**same name** Velopack uses (its `--packTitle`), so removing the legacy install also
+removed Velopack's own shortcut, leaving the app with no Start Menu entry. Because the
+shipped 0.1.x uninstaller can't be changed, the migration (v0.2.2) **snapshots Velopack's
+shortcut bytes before the uninstall and restores them after** (only if the shortcut is
+then missing, so a newer one is never clobbered), preserving its icon and AppUserModelID.
+The leftover install folder is now removed with `os.RemoveAll` (the in-place `_?=`
+uninstaller leaves its own directory behind).
+
 **Build requirement.** Velopack's static Rust libs reference ntdll's `Nt*` syscalls and the
 binding omits the link flag, so every Go/Wails build on Windows must set
 `CGO_LDFLAGS=-lntdll` (env var only — a per-package `#cgo` directive lands in the wrong link
