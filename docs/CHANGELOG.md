@@ -5,6 +5,15 @@ All notable changes to Gobchat Log Browser are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] - 2026-06-29
+
+### Added
+
+- New setting "Hide logs with no detected players" (Settings → General). When
+  enabled, the overview hides log files that contain only system/info or
+  unparseable lines and no actual participants. Off by default, so existing
+  logs stay visible until you opt in.
+
 ## [0.3.1] - 2026-06-29
 
 ### Fixed
@@ -161,6 +170,7 @@ Initial public release.
 - Per-user NSIS installer and portable zip; tag-triggered release pipeline
   (ADR-0011).
 
+[0.3.2]: https://github.com/Shuro/Gobchat-Log-Browser/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/Shuro/Gobchat-Log-Browser/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/Shuro/Gobchat-Log-Browser/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/Shuro/Gobchat-Log-Browser/compare/v0.2.1...v0.2.2
