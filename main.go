@@ -22,9 +22,13 @@ func main() {
 	// Velopack must service install/update/uninstall hooks before any UI is
 	// created; in a normal launch this returns and we continue to Wails. Safe to
 	// call unconditionally (no-op when not launched by the Velopack updater).
-	velopack.Run(velopack.App{
-		AutoApplyOnStartup: true,
-	})
+	//
+	// AutoApplyOnStartup stays false: with it on, Velopack contacts the release
+	// feed and auto-applies a newer version on every launch, which both ignores
+	// the check_updates_on_start consent gate and makes the app flash-and-exit
+	// once a newer release exists. Updates are user-driven and consent-gated
+	// through internal/velopackupd instead (ADR-0013, ADR-0016).
+	velopack.Run(velopack.App{AutoApplyOnStartup: false})
 
 	app := api.NewApp()
 
