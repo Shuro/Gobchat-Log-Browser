@@ -10,6 +10,7 @@ import {
   GetAllTagNames,
 } from '../../wailsjs/go/api/App'
 import type { api, tags } from '../../wailsjs/go/models'
+import { useConfigStore } from './config'
 
 function baseName(path: string): string {
   const parts = path.split(/[\\/]/)
@@ -106,12 +107,17 @@ export const useLogsStore = defineStore('logs', () => {
   })
 
   const visibleSummaries = computed(() => {
-    if (selectedFilters.value.length === 0) return summaries.value
-    return summaries.value.filter((s) =>
-      selectedFilters.value.every((f) =>
+    // Resolved lazily so the logs store can be created before the config store
+    // (the two stores reference each other).
+    const hideEmpty = useConfigStore().cfg?.hide_empty_player_logs ?? false
+    const filters = selectedFilters.value
+    if (!hideEmpty && filters.length === 0) return summaries.value
+    return summaries.value.filter((s) => {
+      if (hideEmpty && (s.participants?.length ?? 0) === 0) return false
+      return filters.every((f) =>
         f.type === 'player' ? s.participants?.includes(f.value) : s.tags?.includes(f.value),
-      ),
-    )
+      )
+    })
   })
 
   function hasFilter(sel: FilterSelection): boolean {

@@ -233,6 +233,7 @@ export namespace config {
 	    theme: string;
 	    channel_filters: Record<string, boolean>;
 	    check_updates_on_start: boolean;
+	    hide_empty_player_logs: boolean;
 	    setup_wizard_version: number;
 	    colors: Record<string, any>;
 	
@@ -252,6 +253,7 @@ export namespace config {
 	        this.theme = source["theme"];
 	        this.channel_filters = source["channel_filters"];
 	        this.check_updates_on_start = source["check_updates_on_start"];
+	        this.hide_empty_player_logs = source["hide_empty_player_logs"];
 	        this.setup_wizard_version = source["setup_wizard_version"];
 	        this.colors = source["colors"];
 	    }

@@ -36,6 +36,7 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 
 	cfg.CheckUpdatesOnStart = true
 	cfg.SetupWizardVersion = SetupWizardCurrentVersion
+	cfg.HideEmptyPlayerLogs = true
 	if err := Save(path, cfg); err != nil {
 		t.Fatalf("Save: %v", err)
 	}
@@ -45,6 +46,9 @@ func TestSaveLoadRoundTrip(t *testing.T) {
 	}
 	if !got.CheckUpdatesOnStart || got.SetupWizardVersion != SetupWizardCurrentVersion {
 		t.Fatalf("update-check fields not persisted: %+v", got)
+	}
+	if !got.HideEmptyPlayerLogs {
+		t.Fatalf("HideEmptyPlayerLogs not persisted: %+v", got)
 	}
 }
 
@@ -65,6 +69,11 @@ func TestLoadLegacyConfigDefaultsUpdateFields(t *testing.T) {
 	}
 	if got.CheckUpdatesOnStart {
 		t.Fatalf("legacy config must not opt into update checks")
+	}
+	// Upgrading must not make existing logs vanish: the hide-empty toggle stays
+	// off until the user opts in.
+	if got.HideEmptyPlayerLogs {
+		t.Fatalf("legacy config must default HideEmptyPlayerLogs to false")
 	}
 	if got.SetupWizardVersion != 0 {
 		t.Fatalf("SetupWizardVersion = %d, want 0 for legacy config", got.SetupWizardVersion)

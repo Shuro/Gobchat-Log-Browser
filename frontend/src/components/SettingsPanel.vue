@@ -284,6 +284,10 @@ async function save() {
               </li>
             </ul>
             <button @click="addDirectory()">{{ t('settings.addDir') }}</button>
+            <label class="check">
+              <input type="checkbox" v-model="draft.hide_empty_player_logs" />
+              {{ t('settings.hideEmptyPlayerLogs') }}
+            </label>
           </section>
 
           <!-- About -->

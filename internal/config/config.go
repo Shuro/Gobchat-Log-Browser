@@ -23,6 +23,7 @@ type Config struct {
 	Theme               string              `json:"theme"`               // "light" | "blue" | "dark-gobchat-ex"
 	ChannelFilters      map[string]bool     `json:"channel_filters"`
 	CheckUpdatesOnStart bool                `json:"check_updates_on_start"` // opt-in update check (docs/adr/0012)
+	HideEmptyPlayerLogs bool                `json:"hide_empty_player_logs"` // hide overview logs with no detected players
 	SetupWizardVersion  int                 `json:"setup_wizard_version"`   // last completed wizard version; 0 = never/pre-versioning
 	// Colors holds per-theme highlight color overrides: theme ("blue"|"light")
 	// → category ("speech"|"emote"|"ooc"|"mention-fg"|"mention-bg") → hex
@@ -101,6 +102,7 @@ func DefaultConfig() Config {
 		Theme:               "blue",
 		ChannelFilters:      map[string]bool{},
 		CheckUpdatesOnStart: false, // never phone home without consent
+		HideEmptyPlayerLogs: false, // show every log by default; opt in to hiding
 		SetupWizardVersion:  0,
 		Colors:              map[string]map[string]string{},
 	}

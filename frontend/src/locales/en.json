@@ -62,6 +62,7 @@
     "detected": "Auto-detected",
     "noDirs": "No extra directories. Auto-detect covers the default location.",
     "addDir": "Add directory…",
+    "hideEmptyPlayerLogs": "Hide logs with no detected players",
     "remove": "Remove",
     "theme": "Theme",
     "blue": "Blue",

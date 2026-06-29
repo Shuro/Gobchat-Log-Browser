@@ -62,6 +62,7 @@
     "detected": "Automatisch erkannt",
     "noDirs": "Keine zusätzlichen Verzeichnisse. Die automatische Erkennung deckt den Standardort ab.",
     "addDir": "Verzeichnis hinzufügen…",
+    "hideEmptyPlayerLogs": "Logs ohne erkannte Spieler ausblenden",
     "remove": "Entfernen",
     "theme": "Farbschema",
     "blue": "Blau",
