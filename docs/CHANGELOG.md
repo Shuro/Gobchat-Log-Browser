@@ -5,7 +5,7 @@ All notable changes to Gobchat Log Browser are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.0] - 2026-06-29
 
 ### Added
 
@@ -149,7 +149,7 @@ Initial public release.
 - Per-user NSIS installer and portable zip; tag-triggered release pipeline
   (ADR-0011).
 
-[Unreleased]: https://github.com/Shuro/Gobchat-Log-Browser/compare/v0.2.2...HEAD
+[0.3.0]: https://github.com/Shuro/Gobchat-Log-Browser/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/Shuro/Gobchat-Log-Browser/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/Shuro/Gobchat-Log-Browser/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/Shuro/Gobchat-Log-Browser/compare/v0.1.4...v0.2.0
