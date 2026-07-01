@@ -6,7 +6,7 @@
 
 **Browse and search your Final Fantasy XIV roleplay chat logs from [Gobchat](https://github.com/MarbleBag/Gobchat).**
 
-[![Go](https://img.shields.io/badge/Go-1.23-00ADD8?logo=go&logoColor=white)](https://go.dev/)
+[![Go](https://img.shields.io/badge/Go-1.24-00ADD8?logo=go&logoColor=white)](https://go.dev/)
 [![Wails](https://img.shields.io/badge/Wails-v2-DF0000?logo=wails&logoColor=white)](https://wails.io/)
 [![Vue](https://img.shields.io/badge/Vue-3-4FC08D?logo=vuedotjs&logoColor=white)](https://vuejs.org/)
 [![License](https://img.shields.io/badge/License-Apache--2.0-blue)](LICENSE)
@@ -23,7 +23,7 @@
 
 **Gobchat Log Browser** is a desktop app that turns those log files into a searchable, filterable archive:
 
-- It auto-detects Gobchat's log folder (`%APPDATA%\Gobchat\log`) or any folders you add yourself.
+- It auto-detects Gobchat's and GobchatEx's log folders (`%APPDATA%\Gobchat\log`, `%APPDATA%\GobchatEx\log`) or any folders you add yourself.
 - Your log files are treated as **strictly read-only** — the app never modifies, moves, or rewrites them.
 - All extras (tags, notes, settings, metadata cache) are stored separately in `%APPDATA%\GobchatLogBrowser`.
 
@@ -47,6 +47,7 @@
 - **Highlighter** — highlight lines that mention your character names.
 - **Tags & notes** — tag logs and attach notes; stored as JSON sidecars, never inside the log files.
 - **Live updates** — the log list refreshes automatically while Gobchat writes new logs.
+- **Hide empty logs** — optionally hide logs with no detected participants from the overview.
 - **Fast startup** — a persistent metadata index means even large log collections open quickly.
 - **Opt-in update check** — get notified about new releases.
 - **First-run wizard, dark & light themes with customizable highlight colors, English & German UI.**
@@ -74,9 +75,11 @@ Building from source (see below) works too, but is optional.
 
 Prerequisites:
 
-- [Go](https://go.dev/dl/) 1.23+
+- [Go](https://go.dev/dl/) 1.24+
 - [Node.js](https://nodejs.org/) (with npm)
 - [Wails CLI v2](https://wails.io/docs/gettingstarted/installation): `go install github.com/wailsapp/wails/v2/cmd/wails@latest`
+
+> **Windows build note:** set `CGO_LDFLAGS=-lntdll` before `wails dev` / `wails build` / `go test` — the velopack-go binding links Velopack's Rust libs, which reference ntdll.
 
 ```bash
 # Development with hot reload

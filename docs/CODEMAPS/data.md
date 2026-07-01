@@ -1,4 +1,4 @@
-<!-- Generated: 2026-06-19 | Files scanned: 34 Go | Token estimate: ~700 -->
+<!-- Generated: 2026-07-01 | Files scanned: 34 Go | Token estimate: ~720 -->
 
 # Data Model
 
@@ -33,6 +33,7 @@ Config (config.json)
   theme                    "light" | "blue" | "dark-gobchat-ex"
   channel_filters          map[channel]bool
   check_updates_on_start   opt-in (default false — never phone home w/o consent)
+  hide_empty_player_logs   hide overview logs with no detected participants (default false)
   setup_wizard_version     last completed wizard version (0 = pre-versioning)
   colors                   theme → category → hex override
 

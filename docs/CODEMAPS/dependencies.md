@@ -1,4 +1,4 @@
-<!-- Generated: 2026-06-19 | Files scanned: go.mod + package.json | Token estimate: ~550 -->
+<!-- Generated: 2026-07-01 | Files scanned: go.mod + package.json | Token estimate: ~580 -->
 
 # Dependencies
 
@@ -11,6 +11,9 @@ all:frontend/dist`. No runtime services or databases.
 github.com/wailsapp/wails/v2     v2.12.0   desktop shell, bindings, events, dialogs
 github.com/fsnotify/fsnotify     v1.10.1   live log-directory watching (logstore/watcher.go)
 github.com/quaadgras/velopack-go v0.0.1358 install + in-app update (cgo; needs -lntdll, ADR-0013)
+  replaced by github.com/Shuro/velopack-go v0.0.1358-patch2 — upstream has several
+  native-memory bugs (unbounded array walk, double-free-prone finalizers, a
+  use-after-free on restart args); ADR-0017, ADR-0018
 golang.org/x/sys                 v0.30.0   Windows registry read for NSIS migration (migrate/)
 ```
 

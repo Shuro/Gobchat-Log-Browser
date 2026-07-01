@@ -6,7 +6,7 @@
 
 **Durchsuche und durchstöbere deine Final-Fantasy-XIV-Rollenspiel-Chatlogs aus [Gobchat](https://github.com/MarbleBag/Gobchat).**
 
-[![Go](https://img.shields.io/badge/Go-1.23-00ADD8?logo=go&logoColor=white)](https://go.dev/)
+[![Go](https://img.shields.io/badge/Go-1.24-00ADD8?logo=go&logoColor=white)](https://go.dev/)
 [![Wails](https://img.shields.io/badge/Wails-v2-DF0000?logo=wails&logoColor=white)](https://wails.io/)
 [![Vue](https://img.shields.io/badge/Vue-3-4FC08D?logo=vuedotjs&logoColor=white)](https://vuejs.org/)
 [![License](https://img.shields.io/badge/License-Apache--2.0-blue)](LICENSE)
@@ -23,7 +23,7 @@
 
 Der **Gobchat Log Browser** ist eine Desktop-App, die aus diesen Log-Dateien ein durchsuchbares, filterbares Archiv macht:
 
-- Der Gobchat-Log-Ordner (`%APPDATA%\Gobchat\log`) wird automatisch erkannt; eigene Verzeichnisse lassen sich zusätzlich hinzufügen.
+- Die Log-Ordner von Gobchat und GobchatEx (`%APPDATA%\Gobchat\log`, `%APPDATA%\GobchatEx\log`) werden automatisch erkannt; eigene Verzeichnisse lassen sich zusätzlich hinzufügen.
 - Deine Log-Dateien werden **strikt nur gelesen** — die App verändert, verschiebt oder überschreibt sie niemals.
 - Alles Weitere (Tags, Notizen, Einstellungen, Metadaten-Cache) liegt getrennt davon in `%APPDATA%\GobchatLogBrowser`.
 
@@ -47,6 +47,7 @@ Der **Gobchat Log Browser** ist eine Desktop-App, die aus diesen Log-Dateien ein
 - **Highlighter** — Zeilen hervorheben, in denen deine Charakternamen vorkommen.
 - **Tags & Notizen** — versieh Logs mit Tags und Notizen; gespeichert als JSON-Sidecar-Dateien, niemals in den Log-Dateien selbst.
 - **Live-Aktualisierung** — die Log-Liste aktualisiert sich automatisch, während Gobchat neue Logs schreibt.
+- **Leere Logs ausblenden** — Logs ohne erkannte Teilnehmer optional aus der Übersicht ausblenden.
 - **Schneller Start** — dank persistentem Metadaten-Index öffnen sich auch große Log-Sammlungen zügig.
 - **Opt-in-Update-Prüfung** — werde über neue Versionen informiert.
 - **Einrichtungsassistent beim ersten Start, dunkles & helles Design mit anpassbaren Hervorhebungsfarben, Oberfläche auf Deutsch & Englisch.**
@@ -74,9 +75,11 @@ Aus dem Quellcode bauen (siehe unten) funktioniert ebenfalls, ist aber optional.
 
 Voraussetzungen:
 
-- [Go](https://go.dev/dl/) 1.23+
+- [Go](https://go.dev/dl/) 1.24+
 - [Node.js](https://nodejs.org/) (mit npm)
 - [Wails CLI v2](https://wails.io/docs/gettingstarted/installation): `go install github.com/wailsapp/wails/v2/cmd/wails@latest`
+
+> **Windows-Hinweis zum Build:** Setze `CGO_LDFLAGS=-lntdll` vor `wails dev` / `wails build` / `go test` — die velopack-go-Anbindung linkt Velopacks Rust-Bibliotheken, die auf ntdll verweisen.
 
 ```bash
 # Entwicklung mit Hot Reload

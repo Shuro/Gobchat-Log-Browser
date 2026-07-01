@@ -1,4 +1,4 @@
-<!-- Generated: 2026-06-19 | Files scanned: 20 frontend | Token estimate: ~700 -->
+<!-- Generated: 2026-07-01 | Files scanned: 20 frontend | Token estimate: ~740 -->
 
 # Frontend (Vue 3 + TS + Pinia)
 
@@ -26,7 +26,9 @@ App.vue (root: header + update banner + setup gate)
 │  │  ├─ ThreadRow.vue      (one reassembled ThreadDTO)
 │  │  └─ TagEditor.vue      (tags + note for current log)
 │  └─ SearchResults.vue     (overlay; SearchResultDTO list, truncated notice)
-├─ SettingsPanel.vue        (v-if showSettings; dirs, language, theme, markers, colors, update opt-in)
+├─ SettingsPanel.vue        (v-if showSettings; dirs incl. DetectedLogDirs() auto-detect
+│                            list, language, theme, markers, colors, update opt-in,
+│                            hide-empty-player-logs toggle)
 └─ SetupWizard.vue          (v-if setupState.needs_setup; first-run / re-shown on version bump)
 ```
 
@@ -36,9 +38,12 @@ App.vue (root: header + update banner + setup gate)
 stores/logs.ts    summaries[], selectedPath, entries[] (raw), threads[] (reassembled),
                   viewMode 'raw'|'reassembled', targetLine (scroll-to from search),
                   tags/note; openLog(), refreshList(), setTags(); FilterSelection.
-                  Persists view.excludedChannels to localStorage.
+                  visibleSummaries getter applies hide_empty_player_logs (config) and
+                  player/tag filter. Persists view.excludedChannels to localStorage.
 stores/search.ts  query, scope 'all'|'current', channel, sender, results[], truncated,
-                  visible, openedHit; run() → App.Search; openHit() sets logs.targetLine.
+                  visible, openedHit; run() tags each request and drops the response if
+                  a newer run() has since started (stale-response guard) → App.Search;
+                  openHit() sets logs.targetLine.
 stores/config.ts  cfg (api.Config), load/save → App.GetConfig/SaveConfig.
 ```
 

@@ -1,4 +1,4 @@
-<!-- Generated: 2026-06-19 | Files scanned: 34 Go + 20 frontend | Token estimate: ~650 -->
+<!-- Generated: 2026-07-01 | Files scanned: 34 Go + 20 frontend | Token estimate: ~660 -->
 
 # Architecture
 
@@ -53,6 +53,7 @@ SearchBar → searchStore.run() → App.Search(text, filePath, channels, sender)
 main.go → wails.Run(Bind: App) → App.Startup
   → load config+tags, build index+store, LoadMetaCache
   → goroutine: store.ScanAll(effectiveDirs) → startWatcher → emit "logs:scanned"
+  → goroutine: migrate.CleanLegacyNSISInstall (one-shot, Windows only, ADR-0013)
 fsnotify Write/Create/Remove → onFileChange (300ms debounce on Write)
   → store.Refresh → emit log:new | log:updated | log:removed
 ```

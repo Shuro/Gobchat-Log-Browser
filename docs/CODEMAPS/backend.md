@@ -1,4 +1,4 @@
-<!-- Generated: 2026-06-19 | Files scanned: 34 Go | Token estimate: ~850 -->
+<!-- Generated: 2026-07-01 | Files scanned: 34 Go | Token estimate: ~880 -->
 
 # Backend (Go)
 
@@ -21,6 +21,7 @@ GetLogThreads(path)                → store.GetEntries → reassemble.Reassembl
 Search(text,path,channels,sender)  → store.GetEntries(ensure) → index.Query(pool=1000) → post-filter → cap=200
 GetTags(file) / SetTags / GetAllTagNames → tags.TagStore
 GetSetupState()                    → config.Gobchat*Dir → needsSetup()
+DetectedLogDirs()                  → existing-on-disk GobchatEx/Gobchat default dirs (ADR-0015)
 PickDirectory()                    → wails OpenDirectoryDialog
 GetLocaleMessages()                → i18n.Localizer.Messages
 Startup(ctx) / Shutdown(ctx)       → Wails lifecycle (load, scan goroutine, watcher,
@@ -60,6 +61,9 @@ version/      version.go   Version (ldflags at release; "dev" locally)
 velopackupd/  updater.go   Check / DownloadAndApply(progress) over GitHub releases feed;
                            not-installed → "dev" (ADR-0013)
 migrate/      nsis_windows.go  one-shot detect + silent uninstall of legacy NSIS install;
+                           refuses to run unless InstallLocation matches the one path the
+                           legacy installer could have used (untrusted per-user registry
+                           value otherwise feeds a destructive os.RemoveAll);
                            nsis_other.go no-op stub (ADR-0013)
 ```
 
