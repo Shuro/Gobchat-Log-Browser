@@ -47,6 +47,13 @@ func CleanLegacyNSISInstall() error {
 	if isCurrentInstall(installLoc) {
 		return nil // never uninstall ourselves
 	}
+	if !isPlausibleLegacyInstall(installLoc) {
+		// The HKCU value feeds both the NSIS in-place uninstall flag and a
+		// later os.RemoveAll — an ordinary per-user registry key with no
+		// integrity protection is not a value we can trust blindly for a
+		// destructive, unattended, every-startup operation.
+		return fmt.Errorf("legacy uninstall key has unexpected InstallLocation %q; refusing to uninstall", installLoc)
+	}
 
 	// The NSIS uninstaller deletes "Gobchat Log Browser.lnk" from the Start Menu —
 	// the very name Velopack also uses (its --packTitle), so it removes Velopack's
@@ -173,4 +180,32 @@ func isCurrentInstall(installLoc string) bool {
 	exe = strings.ToLower(filepath.Clean(exe))
 	loc := strings.ToLower(filepath.Clean(installLoc))
 	return strings.HasPrefix(exe, loc)
+}
+
+// expectedLegacyInstallDir is the one location the legacy NSIS installer ever
+// wrote to: a per-user, no-UAC install at $LOCALAPPDATA\GobchatLogBrowser
+// (docs/adr/0011). Returns "" if %LocalAppData% isn't set, so validation
+// against it fails closed rather than matching anything.
+func expectedLegacyInstallDir() string {
+	base := os.Getenv("LocalAppData")
+	if base == "" {
+		return ""
+	}
+	return filepath.Join(base, "GobchatLogBrowser")
+}
+
+// isPlausibleLegacyInstall reports whether installLoc is exactly the known
+// legacy install directory. installLoc comes from an ordinary per-user HKCU
+// value with no integrity protection, yet feeds both the NSIS in-place
+// uninstall flag and a subsequent os.RemoveAll, so it must match the one
+// location the legacy installer could actually have used before either runs.
+func isPlausibleLegacyInstall(installLoc string) bool {
+	if installLoc == "" || !filepath.IsAbs(installLoc) {
+		return false
+	}
+	expected := expectedLegacyInstallDir()
+	if expected == "" {
+		return false
+	}
+	return strings.EqualFold(filepath.Clean(installLoc), filepath.Clean(expected))
 }

@@ -94,3 +94,46 @@ func TestUninstallerExe(t *testing.T) {
 		})
 	}
 }
+
+// isPlausibleLegacyInstall guards os.RemoveAll and the NSIS in-place uninstall
+// flag against an HKCU InstallLocation value that is empty, relative, or
+// simply wrong — that key is an ordinary per-user registry value with no
+// integrity protection, so a corrupted or unexpectedly broad value must never
+// reach a destructive, unattended, every-startup deletion.
+func TestIsPlausibleLegacyInstall(t *testing.T) {
+	t.Setenv("LocalAppData", `C:\Users\Shuro\AppData\Local`)
+	legacy := `C:\Users\Shuro\AppData\Local\GobchatLogBrowser`
+
+	tests := []struct {
+		name string
+		loc  string
+		want bool
+	}{
+		{"exact legacy install dir", legacy, true},
+		{"case-insensitive match", `c:\users\shuro\appdata\local\gobchatlogbrowser`, true},
+		{"trailing separator still matches", legacy + `\`, true},
+		{"empty value is refused", "", false},
+		{"relative path is refused", `GobchatLogBrowser`, false},
+		{"unrelated broad directory is refused", `C:\Users\Shuro\Documents`, false},
+		{"drive root is refused", `C:\`, false},
+		{"velopack's own install dir is refused", `C:\Users\Shuro\AppData\Local\Gobchat-Log-Browser`, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isPlausibleLegacyInstall(tt.loc); got != tt.want {
+				t.Errorf("isPlausibleLegacyInstall(%q) = %v, want %v", tt.loc, got, tt.want)
+			}
+		})
+	}
+}
+
+// isPlausibleLegacyInstall must fail closed, not open, when it cannot
+// determine the expected legacy directory — an unset %LocalAppData% must
+// never be treated as "anything goes".
+func TestIsPlausibleLegacyInstall_NoLocalAppData(t *testing.T) {
+	t.Setenv("LocalAppData", "")
+	if isPlausibleLegacyInstall(`C:\Users\Shuro\AppData\Local\GobchatLogBrowser`) {
+		t.Fatal("expected false when %LocalAppData% is unset, got true")
+	}
+}
