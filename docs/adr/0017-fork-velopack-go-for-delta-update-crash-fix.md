@@ -1,6 +1,6 @@
 # ADR-0017: Fork velopack-go to fix a delta-update crash
 
-- **Status:** Accepted
+- **Status:** Superseded by ADR-0018 (DeltasToTarget handling only; root cause below still accurate)
 - **Date:** 2026-07-01
 
 ## Context
