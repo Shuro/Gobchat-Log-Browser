@@ -40,3 +40,8 @@ require (
 )
 
 // replace github.com/wailsapp/wails/v2 v2.12.0 => C:\Users\Shuro\go\pkg\mod
+
+// ADR-0017: velopack-go's UpdateInfo.load() reads past the end of an
+// unterminated native DeltasToTarget array, crashing the process on delta
+// updates. Points at a patched fork until fixed upstream.
+replace github.com/quaadgras/velopack-go => github.com/Shuro/velopack-go v0.0.1358-patch1
