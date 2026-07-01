@@ -22,6 +22,9 @@ export const useSearchStore = defineStore('search', () => {
   // user can come back and open the next hit without re-running the search.
   const visible = ref(false)
   const openedHit = ref<{ filePath: string; lineNumber: number } | null>(null)
+  // Bumped on every run() so a slower, older request can recognize it's been
+  // superseded and discard its result instead of clobbering a newer one.
+  let requestId = 0
 
   async function run() {
     const logs = useLogsStore()
@@ -30,6 +33,7 @@ export const useSearchStore = defineStore('search', () => {
       clear()
       return
     }
+    const thisRequest = ++requestId
     loading.value = true
     ran.value = true
     visible.value = true
@@ -38,10 +42,11 @@ export const useSearchStore = defineStore('search', () => {
       const filePath = scope.value === 'current' ? logs.selectedPath ?? '' : ''
       const channels = channel.value ? [channel.value] : []
       const res = await Search(q, filePath, channels, sender.value.trim())
+      if (thisRequest !== requestId) return // a newer search superseded this one
       results.value = res.results ?? []
       truncated.value = res.truncated
     } finally {
-      loading.value = false
+      if (thisRequest === requestId) loading.value = false
     }
   }
 
