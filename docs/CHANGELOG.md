@@ -5,6 +5,26 @@ All notable changes to Gobchat Log Browser are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.4] - 2026-07-01
+
+### Fixed
+
+- Delta updates (the common case once you already have a prior version
+  installed) could crash the app outright while checking for or downloading
+  an update, due to a bug in the underlying Velopack update library reading
+  past the end of an internal list. Full updates were unaffected. Fixed by
+  patching the library (docs/adr/0017).
+- Further hardening of the same library: a potential double-free in asset
+  cleanup, a use-after-free when applying an update with a restart, and a bug
+  that could leave a stray character on the end of the reported installed
+  version (docs/adr/0018).
+- **Note for existing installs (v0.3.0–v0.3.3):** the crash above happens in
+  your *currently installed* app while it checks for updates, before it ever
+  receives this fix — so the in-app updater can't reliably deliver v0.3.4 to
+  an install that hits it. If "check for updates" crashes the app, download
+  v0.3.4 manually from the releases page and reinstall over the existing
+  install (your tags, notes, and settings are preserved).
+
 ## [0.3.3] - 2026-07-01
 
 ### Fixed
